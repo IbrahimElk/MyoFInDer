@@ -1,4 +1,3 @@
-
 body,
 html {
   height: 100%;
@@ -6,21 +5,27 @@ html {
   margin: 0;
   padding: 0;
 }
+
 body {
   display: flex;
 }
-/* id canvas*/
+
 #canvas_container {
-  /* A flex value of 3 means that this element will take up three times the space compared to other flex items with a flex value of 1. */
   flex: 3;
   border: 1px solid #000;
   position: relative;
   width: 100%;
   height: 100%;
-  /* background-color: #f0f0f0; */
-
 }
 
+canvas {
+  position: absolute; /* Use absolute positioning for the canvas elements */
+  top: 0; /* Stack the canvas elements from the top */
+  left: 0; /* Align the canvas elements to the left */
+  width: 100%; /* Set the width to 100% of the container */
+  height: 100%; /* Set the height to 100% of the container */
+  border: 5px solid #ccc; /* Optional: Add a border to visually separate the canvas elements */
+}
 #sidebar {
   flex: 1;
   background-color: #f0f0f0;
