@@ -1,54 +1,78 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="/src/styles.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
-    <script type="module" src="/src/main.ts" defer></script>
-    <style>
-      .logo.vite:hover {
-        filter: drop-shadow(0 0 2em #747bff);
-      }
-
-      .logo.typescript:hover {
-        filter: drop-shadow(0 0 2em #2d79c7);
-      }
-    </style>
+    <title>Image Canvas with Sidebar</title>
+    <link rel="stylesheet" href="./src/styles.css" />
   </head>
-
   <body>
-    <div class="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div class="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/src/assets/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img
-            src="/src/assets/tauri.svg"
-            class="logo tauri"
-            alt="Tauri logo"
-          />
-        </a>
-        <a href="https://www.typescriptlang.org/docs" target="_blank">
-          <img
-            src="/src/assets/typescript.svg"
-            class="logo typescript"
-            alt="typescript logo"
-          />
-        </a>
+    <div id="canvas_container">
+      <canvas id="canvas"></canvas>
+    </div>
+    <div id="sidebar">
+      <div class="button-group">
+        <input type="file" id="loadImagesButton" accept="image/*" multiple />
+        <button id="processImagesButton">Process Images</button>
+        <button id="saveAsButton">Save As</button>
       </div>
 
-      <p>Click on the Tauri logo to learn more about the framework</p>
+      <div class="checkbox-group">
+        <span> Channels: </span>
+        <div>
+          <input type="checkbox" id="blueCheckbox" />
+          <label for="blueCheckbox">Blue</label>
+        </div>
+        <div>
+          <input type="checkbox" id="greenCheckbox" />
+          <label for="greenCheckbox">Green</label>
+        </div>
+        <div>
+          <input type="checkbox" id="redCheckbox" />
+          <label for="redCheckbox">Red</label>
+        </div>
+      </div>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
+      <div class="checkbox-group">
+        <span> Indicators: </span>
 
-      <p id="greet-msg"></p>
+        <div>
+          <input type="checkbox" id="nucleiCheckbox" />
+          <label for="nucleiCheckbox">Nuclei</label>
+        </div>
+        <div>
+          <input type="checkbox" id="fibersCheckbox" />
+          <label for="fibersCheckbox">Fibers</label>
+        </div>
+      </div>
+      <div class="checkbox-group-select-all">
+        <input type="checkbox" id="selectAllCheckbox" />
+        <button id="removeAllButton">X</button>
+      </div>
+      <div class="card-container" id="card-container">
+        <div class="card">
+          <div class="card-title">Default Image</div>
+          <div class="card-info">
+            <div class="card-info-item">
+              <label>Total:</label>
+              <span>101</span>
+            </div>
+            <div class="card-info-item">
+              <label>Positive:</label>
+              <span>12</span>
+            </div>
+            <div class="card-info-item">
+              <label>Ratio:</label>
+              <span>15%</span>
+            </div>
+            <div class="card-info-item">
+              <label>Fiber Area:</label>
+              <span>8%</span>
+            </div>
+          </div>
+          <input type="checkbox" class="card-checkbox" />
+          <div class="delete-button">X</div>
+        </div>
+      </div>
     </div>
   </body>
+  <script type="module" src="./src/main.ts"></script>
 </html>
