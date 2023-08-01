@@ -5,9 +5,89 @@ import numpy as np
 import numpy.ma as ma
 from pathlib import Path
 import cv2
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Optional
+from numpy import zeros, stack, concatenate, ndarray
+from re import findall
+import time
 
-from .tools import check_image
+def check_image(image_path: Path) -> Optional[ndarray]:
+    """Function making sure that the loaded image has 3 channels and is 8-bits.
+
+    It ignores the alpha channel if any, and can handle all the usual dtypes.
+    Grayscale images simply receive two additional empty channels to give a
+    3-channel image.
+
+    Args:
+        image_path: The path to the image to load.
+
+    Returns:
+        The loaded image as a 3-channel 8-bits array, or None if the loading
+        wasn't successful.
+    """
+
+    # Loading the image
+    cv_img = cv2.imread(str(image_path), cv2.IMREAD_ANYCOLOR)
+
+    # In case the file cannot be reached
+    if cv_img is None:
+        return None
+
+    zero_channel = zeros([cv_img.shape[0], cv_img.shape[1]])
+
+    # In this section, we ensure that the image is RGB
+    # The image is grayscale, building a 3 channel image from it
+    if len(cv_img.shape) == 2:
+        cv_img = stack([concatenate([zero_channel, zero_channel],
+                                    axis=2), cv_img], axis=2)
+
+    # If there's an Alpha channel on a grayscale, ignore it
+    elif len(cv_img.shape) == 3 and cv_img.shape[2] == 2:
+        cv_img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
+        cv_img = stack([concatenate([zero_channel, zero_channel],
+                                    axis=2), cv_img], axis=2)
+
+    # The image is 3 or 4 channels, ignoring the Alpha channel if any
+    elif len(cv_img.shape) == 3 and cv_img.shape[2] in [3, 4]:
+        cv_img = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
+        cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+
+    # If it's another format, returning None to indicate it wasn't successful
+    else:
+        return None
+
+    # Parsing the d_type string of the image
+    try:
+        depth = findall(r'\d+', str(cv_img.dtype))[0]
+    except IndexError:
+        depth = ''
+    type_ = str(cv_img.dtype).strip(depth)
+
+    # In this section, we ensure that the image is 8-bits
+    # If it's boolean, the image will be black and white
+    if type_ == 'bool':
+        cv_img = (cv_img.astype('uint8') * 255).astype('uint8')
+
+    # If it's int, first making it uint and then casting to uint8
+    elif type_ == 'int':
+        cv_img = (cv_img + 2 ** (int(depth) - 1)).astype('uint' +
+                                                         depth)
+        cv_img = (cv_img / 2 ** (int(depth) - 8)).astype('uint8')
+
+    # If it's uint, simply casting to uint8
+    elif type_ == 'uint':
+        cv_img = (cv_img / 2 ** (int(depth) - 8)).astype('uint8')
+
+    # If it's float, casting to [0-1] and then to uint8
+    elif type_ == 'float':
+        cv_img = ((cv_img - cv_img.min(initial=None)) /
+                  (cv_img.max(initial=None) - cv_img.min(initial=None))
+                  * 255).astype('uint8')
+
+    # If it's another format, returning None to indicate it wasn't successful
+    else:
+        return None
+
+    return cv_img
 
 # Table for converting color strings to channels, assuming BGR images
 numpy_color_to_int = {"red": 0,
@@ -58,12 +138,17 @@ class Image_segmentation:
                   numpy_color_to_int[fiber_color]]
 
         # Loads the image and keeps only the nuclei and fibers channels
+        t3 = time.perf_counter()
         image = check_image(path)
+        t4 = time.perf_counter()
+        print("loading image and cheking")
+        print(t4-t3)
 
         # The image couldn't be loaded
         if image is None:
             raise IOError("Could not load the image for segmentation, "
                           "aborting !")
+
 
         # Removing the scale bar
         image[(image[:, :, 0] > 50) &
@@ -87,6 +172,8 @@ class Image_segmentation:
         fill_holes_threshold = 0
         pixel_expansion = None
         maxima_algorith = 'h_maxima'
+
+        t5 = time.perf_counter()
 
         # Actual nuclei detection function
         labeled_image = self._app.predict(
@@ -113,14 +200,21 @@ class Image_segmentation:
                 'maxima_algorith': maxima_algorith,
             })
 
+        t6 = time.perf_counter()
+        print("predicting image")
+        print(t6-t5)
         # Removing useless axes on the output and nuclei channel
         labeled_image = np.squeeze(labeled_image)
 
+        
+        t7 = time.perf_counter()
         # Getting the fiber mask
         mask = self._get_fiber_mask(fiber_channel,
                                     nuclei_channel,
                                     fiber_threshold)
-
+        t8 = time.perf_counter()
+        print("getting fiber mask:")
+        print(t8-t7)
         del fiber_channel
 
         # Calculating the area of fibers over the total area
@@ -132,10 +226,13 @@ class Image_segmentation:
                                              cv2.CHAIN_APPROX_SIMPLE)
         fiber_contours = tuple(map(np.squeeze, fiber_contours))
 
+        t9 = time.perf_counter()
         # Getting the position of the nuclei
         nuclei_out, nuclei_in = self._get_nuclei_positions(
             labeled_image, mask, nuclei_channel, 0.4)
-
+        t10 = time.perf_counter()
+        print("finding nuclei posiiton")
+        print(t10-t9)
         return path, nuclei_out, nuclei_in, fiber_contours, area
 
     @staticmethod
@@ -243,3 +340,24 @@ class Image_segmentation:
                 nuclei_in_fiber.append((center_x, center_y))
 
         return nuclei_out_fiber, nuclei_in_fiber
+
+
+t1 = time.perf_counter()
+varrr = Image_segmentation()
+t2 = time.perf_counter()
+print(t2-t1)
+
+output = varrr("/home/ibrahim/Pictures/Screenshot.png",
+      "blue",
+      "green",
+      25,
+      25,
+      20)
+
+# print(output)
+
+
+end = time.perf_counter()
+execution_time = end - t1
+
+print("Execution Time:", execution_time, "seconds")

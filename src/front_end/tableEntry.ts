@@ -1,23 +1,23 @@
 import { CanvasInteraction } from "./canvasInteraction";
 
-export class ImageLayer {
+export class TableEntry {
   private static counter: number = 0;
   public canvasElement: CanvasEntry;
   public cardElement: CardEntry;
   private id:number;
   constructor(htmlImage: HTMLImageElement, nameOfImage: string) {
-    this.id = ImageLayer.counter;
+    this.id = TableEntry.counter;
 
     this.canvasElement = new CanvasEntry(
       htmlImage,
-      ImageLayer.counter
+      TableEntry.counter
     );
     this.cardElement = new CardEntry(
       nameOfImage, 
-      ImageLayer.counter
+      TableEntry.counter
     );
 
-    ImageLayer.counter++;
+    TableEntry.counter++;
   }
 
   public getId() {
