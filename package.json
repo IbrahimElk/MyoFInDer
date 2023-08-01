@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --force",
+    "dev": "vite --force", 
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
@@ -12,8 +12,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.4.0",
-    "http-server": "^14.1.1"
+    "@tauri-apps/api": "^1.4.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.4.0",

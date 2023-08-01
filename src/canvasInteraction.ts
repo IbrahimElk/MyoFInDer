@@ -215,7 +215,7 @@ export class CanvasInteraction {
     }
   }
 
-  public mouseUpHandler() {
+  public mouseUpHandler(e: MouseEvent) {
     this.transform.isDragging = false;
   }
 

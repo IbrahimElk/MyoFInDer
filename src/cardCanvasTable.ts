@@ -1,13 +1,13 @@
-import { TableEntry } from "./tableEntry";
+import { ImageLayer } from "./imageLayer";
 
-export class FileTable {
-  private layers: Set<TableEntry>;
-  private activeLayer: TableEntry | undefined;
-  private checkboxedlayers: Set<TableEntry>;
+export class CardCanvasTable {
+  private layers: Set<ImageLayer>;
+  private activeLayer: ImageLayer | undefined;
+  private checkboxedlayers: Set<ImageLayer>;
 
   constructor() {
-    this.layers = new Set<TableEntry>();
-    this.checkboxedlayers = new Set<TableEntry>();
+    this.layers = new Set<ImageLayer>();
+    this.checkboxedlayers = new Set<ImageLayer>();
     this.activeLayer = undefined;
 
     this.selectAllCardsEventListener();
@@ -23,7 +23,7 @@ export class FileTable {
     ) as HTMLInputElement;
 
     selectAllcheckBox.addEventListener("click", () => {
-      this.layers.forEach((entry: TableEntry) => {
+      this.layers.forEach((entry: ImageLayer) => {
         const checkbox = entry.cardElement
           .getHtmlCard()
           .querySelector(".card-checkbox") as HTMLInputElement;
@@ -45,7 +45,7 @@ export class FileTable {
 
     deleteButton.addEventListener("click", () => {
 
-      this.checkboxedlayers.forEach((entry: TableEntry) => {
+      this.checkboxedlayers.forEach((entry: ImageLayer) => {
         entry.canvasElement.deleteHTMLCanvas();
         entry.cardElement.deleteHtmlCard();
         this.layers.delete(entry);
@@ -81,9 +81,9 @@ export class FileTable {
     }
   };
 
-  private mouseUpHandler = () => {
+  private mouseUpHandler = (e: MouseEvent) => {
     if (this.activeLayer) {
-      this.activeLayer.canvasElement.canvasTransform.mouseUpHandler();
+      this.activeLayer.canvasElement.canvasTransform.mouseUpHandler(e);
     }
   };
 
@@ -188,7 +188,7 @@ export class FileTable {
     const img = new Image();
     img.src = location;
     img.addEventListener("load", () => {
-      const newLayer = new TableEntry(img, name);
+      const newLayer = new ImageLayer(img, name);
       if (this.layers.size === 0) {
         this.activeLayer = newLayer;
         this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
@@ -200,7 +200,7 @@ export class FileTable {
     });
   }
 
-  private initialiseDeleteCardEventListener(entry: TableEntry) {
+  private initialiseDeleteCardEventListener(entry: ImageLayer) {
     const deleteButton = entry.cardElement
       .getHtmlCard()
       .querySelector(".delete-button") as HTMLDivElement;
@@ -220,7 +220,7 @@ export class FileTable {
     });
   }
 
-  private initialiseCheckingBoxEventListener(entry: TableEntry) {
+  private initialiseCheckingBoxEventListener(entry: ImageLayer) {
     const checkbox = entry.cardElement
       .getHtmlCard()
       .querySelector(".card-checkbox") as HTMLInputElement;
@@ -235,7 +235,7 @@ export class FileTable {
     });
   }
 
-  private initialiseSelectCardEventListener(entry: TableEntry) {
+  private initialiseSelectCardEventListener(entry: ImageLayer) {
     const card = entry.cardElement.getHtmlCard();
 
     card.addEventListener("click", () => {
