@@ -23,6 +23,13 @@ export class ImageLayer {
   public getId() {
     return this.id;
   }
+  //TODO: ook nog andere gegevns moeten opgeslagen worden, zoals ratio , ...  
+  public toJSON() {
+    return  {}
+  //     this.canvasElement.canvasTransform.getImageData();
+  //     this.canvasElement.canvasTransform.getFibers();
+  //     this.canvasElement.canvasTransform.getNuclei();
+  }
 }
 
 class CanvasEntry {
@@ -152,5 +159,9 @@ class CardEntry {
       `card:${this.id}`
     ) as HTMLDivElement;
     cardDiv.remove();
+  }
+
+  public getName() {
+    return this.name;
   }
 }

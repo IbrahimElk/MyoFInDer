@@ -1,14 +1,15 @@
 import { ImageLayer } from "./imageLayer";
 
-export class CardCanvasTable {
+export class FileTable {
   private layers: Set<ImageLayer>;
   private activeLayer: ImageLayer | undefined;
   private checkboxedlayers: Set<ImageLayer>;
-
-  constructor() {
+  private title:string;
+  constructor(projectName:string) {
     this.layers = new Set<ImageLayer>();
     this.checkboxedlayers = new Set<ImageLayer>();
     this.activeLayer = undefined;
+    this.title = projectName;
 
     this.selectAllCardsEventListener();
     this.deleteCheckedCardsEventListener();
@@ -44,7 +45,6 @@ export class CardCanvasTable {
     ) as HTMLButtonElement;
 
     deleteButton.addEventListener("click", () => {
-
       this.checkboxedlayers.forEach((entry: ImageLayer) => {
         entry.canvasElement.deleteHTMLCanvas();
         entry.cardElement.deleteHtmlCard();
@@ -204,7 +204,7 @@ export class CardCanvasTable {
     const deleteButton = entry.cardElement
       .getHtmlCard()
       .querySelector(".delete-button") as HTMLDivElement;
-    
+
     deleteButton.addEventListener("click", (event) => {
       event.stopPropagation();
       const confirmation = window.confirm(
@@ -251,5 +251,56 @@ export class CardCanvasTable {
       this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
     });
   }
+  
+  // FIXME: is na processing steeds zelfde checkboxedLayers, wss , dus bij getToProcessFiles, checkboxedLayers kopieren naar nieuwe variable. 
+  public drawProcessesFiles(result: {
+    nucleiIn: [number, number][];
+    nucleiOut: [number, number][];
+    fiber: [number, number][];
+  }) {
+    this.checkboxedlayers.forEach((layer)=>{
+      for (const [x,y] of result.nucleiIn) {
+        layer.canvasElement.canvasTransform.addMarker(x,y,0)//TODO: change type correctly
+      }
+    })
+    this.checkboxedlayers.forEach((layer)=>{
+      for (const [x,y] of result.nucleiOut) {
+        layer.canvasElement.canvasTransform.addMarker(x,y,1)//TODO: change type correctly
+      }
+    })
+    this.checkboxedlayers.forEach((layer)=>{
+        layer.canvasElement.canvasTransform.addFiber(result.fiber)
+    })
+  }
 
+  public getToProcessFiles() {
+    const allLayersImages: {
+      [key: string]: { arr: Uint8ClampedArray; width: number; height: number };
+    } = {};
+    this.checkboxedlayers.forEach((layer) => {
+      const imgData: ImageData =
+        layer.canvasElement.canvasTransform.getImageData();
+      const oneDimArray = imgData.data;
+      const width = imgData.width;
+      const height = imgData.height;
+      allLayersImages[layer.getId()] = {
+        arr: oneDimArray,
+        width: width,
+        height: height,
+      }; // in python met numpy reshape veranderen.
+    });
+    return allLayersImages;
+  }
+
+  // FIXME:
+  public getToSaveData() {
+    const SAVE_DATA:{title:string,data:Array<{}>} = {
+      title: this.title,
+      data: []
+    }
+    this.layers.forEach((layer)=>{
+      SAVE_DATA.data.push(layer.toJSON());
+    })
+    return SAVE_DATA;
+  }
 }

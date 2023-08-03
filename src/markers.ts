@@ -1,3 +1,15 @@
+// Define a type for the JSON representation of Nucleus
+export type NucleusJSON = {
+  Xpos: number;
+  Ypos: number;
+  id: number;
+  type: number;
+  radius: any; // Update this type to the actual type of the 'getRadius()' method
+  color: string;
+};
+export type FiberJSON = {
+  fiberPath: [number, number][];
+};
 /**
  * Class holding the data associated with a single nucleus.
  * type == 0, nucleus inside fiber
@@ -37,6 +49,17 @@ export class Nucleus {
     } else {
       // for now, we have only 2 types.
       return `rgb(${250},${218},${94})`;
+    }
+  }
+
+  toJSON():NucleusJSON{
+    return {
+        id: this.getId(),
+        Xpos: this.getXpos(),
+        Ypos: this.getYpos(),
+        type: this.getType(),
+        radius: this.getRadius(),
+        color: this.getColor(),
     }
   }
 }
@@ -83,6 +106,17 @@ export class Nuclei {
   public getLength(): number {
     return this.nuclei.length;
   }
+
+  public toJSON(): { nuclei: NucleusJSON[] } {
+    const my_nuclei: { nuclei: NucleusJSON[] } = {
+      nuclei: []
+    };
+    
+    this.nuclei.forEach((nuc) => {
+      my_nuclei.nuclei.push(nuc.toJSON());
+    });
+    return my_nuclei;
+  };
 }
 
 /**
@@ -95,6 +129,10 @@ export class Fiber {
   constructor(id: number, position: [number, number][]) {
     this.id = id;
     this.position = position;
+  }
+
+  public toJSON():{fiberPath : [number, number][] }{
+    return {fiberPath : this.position}
   }
 }
 
@@ -136,5 +174,15 @@ export class Fibers {
 
   public getLength(): number {
     return this.fibers.length;
+  }
+
+  public toJSON(): {fibers: FiberJSON[]} {
+    const my_fibers:  {fibers: FiberJSON[]} = {
+      fibers: [],
+    };
+    this.fibers.forEach((fib)=>{
+      my_fibers.fibers.push(fib.toJSON())
+    })
+    return my_fibers;
   }
 }

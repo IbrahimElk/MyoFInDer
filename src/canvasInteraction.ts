@@ -1,4 +1,4 @@
-import { Nuclei, Nucleus, Fiber, Fibers } from "./markers";
+import { Nuclei, Nucleus, Fiber, Fibers, NucleusJSON,FiberJSON } from "./markers";
 
 interface transformationObject {
   pos: { x: number; y: number };
@@ -19,7 +19,7 @@ export class CanvasInteraction {
   private static zoomExponent = 0.05; // exponential zooming for smooth zooming effect.
   private imageColors;
 
-  public transform: transformationObject;
+  private transform: transformationObject;
   private showingNuclei: boolean;
   private showingFibers: boolean;
 
@@ -49,78 +49,10 @@ export class CanvasInteraction {
 
     this.fitToScale();
   }
+  // -------------------------------------------------------------------------
+  // PUBLIC FUNCTIONS
+  // -------------------------------------------------------------------------
 
-  private clampOffsetPan() {
-    const canvasWidth = this.canvas.width;
-    const canvasHeight = this.canvas.height;
-    const imageWidth = this.image.width * this.transform.scale;
-    const imageHeight = this.image.height * this.transform.scale;
-
-    // Calculate the maximum allowed translation (pan) in the x and y directions when zoomed in
-    const maxPanX = Math.max(0, canvasWidth - imageWidth);
-    const maxPanY = Math.max(0, canvasHeight - imageHeight);
-
-    // Calculate the minimum allowed translation (pan) in the x and y directions when zoomed in
-    const minPanX = Math.min(0, canvasWidth - imageWidth);
-    const minPanY = Math.min(0, canvasHeight - imageHeight);
-
-    // Clamp the x and y offset to stay within the canvas bounds, considering the zoom level
-    this.transform.pos.x = Math.max(
-      minPanX,
-      Math.min(this.transform.pos.x, maxPanX)
-    );
-    this.transform.pos.y = Math.max(
-      minPanY,
-      Math.min(this.transform.pos.y, maxPanY)
-    );
-
-    // If the image is smaller than the canvas, center it
-    if (imageWidth < canvasWidth) {
-      this.transform.pos.x = (canvasWidth - imageWidth) / 2;
-    }
-    if (imageHeight < canvasHeight) {
-      this.transform.pos.y = (canvasHeight - imageHeight) / 2;
-    }
-
-    this.updateMatrices();
-  }
-
-  private fitToScale() {
-    // Calculate the initial scale factor to fit the image in the canvas
-    const scaleX = this.canvas.width / this.image.width;
-    const scaleY = this.canvas.height / this.image.height;
-    this.transform.scale = Math.min(scaleX, scaleY);
-    this.updateMatrices();
-  }
-  // update the transformation matrix and change the inverse matric accordingly.
-  private updateMatrices() {
-    const M = this.transform.m; // still a reference to the same array
-    const IM = this.transform.im; // if IM changes so does this.transform.im
-    const S = this.transform.scale;
-    const P = this.transform.pos;
-
-    M[3] = M[0] = S;
-    M[1] = M[2] = 0;
-    M[4] = P.x;
-    M[5] = P.y;
-    // calculate the inverse transformation
-    IM[0] = IM[3] = 1 / S;
-    IM[1] = IM[2] = 0;
-    IM[4] = -P.x / S;
-    IM[5] = -P.y / S;
-  }
-  // Function to clear the canvas
-  public clearCanvas() {
-    this.ctx.save();
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-  // Function to restore the canvas state
-  private restoreCanvas() {
-    this.ctx.restore();
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-  }
-  // Function to draw the image with markers
   public drawImageWithMarkers() {
     // console.log("inside drawImageWithMarkers");
     // Clear the canvas before drawing the image
@@ -159,41 +91,58 @@ export class CanvasInteraction {
     }
     this.restoreCanvas();
   }
-  private drawCircle(x: number, y: number, radius: number, fill: string) {
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-    if (fill) {
-      this.ctx.fillStyle = fill;
-      this.ctx.fill();
-    }
+
+  public getImageData(){
+    this.clearCanvas();
+    this.ctx.drawImage(this.image, 0, 0);
+    const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    this.drawImageWithMarkers();
+    return imgData;
   }
 
-  private drawFiber(marker: Fiber) {
-    const points = marker.position;
-    // Set stroke and fill colors
-    this.ctx.strokeStyle = "magenta";
-    this.ctx.fillStyle = "rgba(255, 182, 193, 0.5)";
-    // Begin the path
-    this.ctx.beginPath();
-
-    // Move to the first point
-    this.ctx.moveTo(points[0][0], points[0][1]);
-
-    // Draw lines to the rest of the points
-    for (var i = 1; i < points.length; i++) {
-      this.ctx.lineTo(points[i][0], points[i][1]);
-    }
-
-    // Close the path to connect the last point to the first
-    this.ctx.closePath();
-
-    // Fill the inside of the path with the specified color
-    this.ctx.fill();
-
-    // Draw the stroke of the path with the specified color
-    this.ctx.stroke();
+  public clearCanvas() {
+    this.ctx.save();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
+  public showNuclei(show: boolean): void {
+    this.showingNuclei = show;
+  }
+
+  public showFibers(show: boolean): void {
+    this.showingFibers = show;
+  }
+
+  public updateChannels(
+    redChannelEnabled: boolean,
+    greenChannelEnabled: boolean,
+    blueChannelEnabled: boolean
+  ) {
+    this.imageColors.isBlueRemoved = !blueChannelEnabled;
+    this.imageColors.isGreenRemoved = !greenChannelEnabled;
+    this.imageColors.isRedRemoved = !redChannelEnabled;
+  }
+
+  public addMarker(x: number, y: number, type: number) {
+    const marker = new Nucleus(x, y, type);
+    this.nuclei.append(marker);
+    this.drawImageWithMarkers();
+  }
+  
+  public addFiber(fiberPoints :[number,number][]) {
+    const pointer = new Fiber(0, fiberPoints);
+    this.fibers.append(pointer);
+  }
+
+  public getNuclei(): { nuclei: NucleusJSON[] }{
+    return this.nuclei.toJSON();
+  }
+
+  public getFibers(): { fibers: FiberJSON[] }{
+    return this.fibers.toJSON();
+  }
+  //----------------------------------------- 
   public mouseDownHandler(e: MouseEvent) {
     if (e.button === 1) {
       this.transform.isDragging = true;
@@ -218,9 +167,8 @@ export class CanvasInteraction {
   public mouseUpHandler(e: MouseEvent) {
     this.transform.isDragging = false;
   }
-
   // Handle mousewheel event to zoom in/out around the cursor position
-  public mouseWheelHandler(e: WheelEvent):void {
+  public mouseWheelHandler(e: WheelEvent): void {
     e.preventDefault();
     const P = this.transform.pos;
 
@@ -274,6 +222,111 @@ export class CanvasInteraction {
       this.addMarker(point.x, point.y, e.button);
     }
   }
+  
+  // -------------------------------------------------------------------------
+  // PRIVATE FUNCTIONS
+  // -------------------------------------------------------------------------
+  private clampOffsetPan() {
+    const canvasWidth = this.canvas.width;
+    const canvasHeight = this.canvas.height;
+    const imageWidth = this.image.width * this.transform.scale;
+    const imageHeight = this.image.height * this.transform.scale;
+
+    // Calculate the maximum allowed translation (pan) in the x and y directions when zoomed in
+    const maxPanX = Math.max(0, canvasWidth - imageWidth);
+    const maxPanY = Math.max(0, canvasHeight - imageHeight);
+
+    // Calculate the minimum allowed translation (pan) in the x and y directions when zoomed in
+    const minPanX = Math.min(0, canvasWidth - imageWidth);
+    const minPanY = Math.min(0, canvasHeight - imageHeight);
+
+    // Clamp the x and y offset to stay within the canvas bounds, considering the zoom level
+    this.transform.pos.x = Math.max(
+      minPanX,
+      Math.min(this.transform.pos.x, maxPanX)
+    );
+    this.transform.pos.y = Math.max(
+      minPanY,
+      Math.min(this.transform.pos.y, maxPanY)
+    );
+
+    // If the image is smaller than the canvas, center it
+    if (imageWidth < canvasWidth) {
+      this.transform.pos.x = (canvasWidth - imageWidth) / 2;
+    }
+    if (imageHeight < canvasHeight) {
+      this.transform.pos.y = (canvasHeight - imageHeight) / 2;
+    }
+
+    this.updateMatrices();
+  }
+
+  private fitToScale() {
+    // Calculate the initial scale factor to fit the image in the canvas
+    const scaleX = this.canvas.width / this.image.width;
+    const scaleY = this.canvas.height / this.image.height;
+    this.transform.scale = Math.min(scaleX, scaleY);
+    this.updateMatrices();
+  }
+
+  // update the transformation matrix and change the inverse matric accordingly.
+  private updateMatrices() {
+    const M = this.transform.m; // still a reference to the same array
+    const IM = this.transform.im; // if IM changes so does this.transform.im
+    const S = this.transform.scale;
+    const P = this.transform.pos;
+
+    M[3] = M[0] = S;
+    M[1] = M[2] = 0;
+    M[4] = P.x;
+    M[5] = P.y;
+    // calculate the inverse transformation
+    IM[0] = IM[3] = 1 / S;
+    IM[1] = IM[2] = 0;
+    IM[4] = -P.x / S;
+    IM[5] = -P.y / S;
+  }
+
+  // Function to restore the canvas state
+  private restoreCanvas() {
+    this.ctx.restore();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
+  private drawCircle(x: number, y: number, radius: number, fill: string) {
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    if (fill) {
+      this.ctx.fillStyle = fill;
+      this.ctx.fill();
+    }
+  }
+
+  private drawFiber(marker: Fiber) {
+    const points = marker.position;
+    // Set stroke and fill colors
+    this.ctx.strokeStyle = "magenta";
+    this.ctx.fillStyle = "rgba(255, 182, 193, 0.5)";
+    // Begin the path
+    this.ctx.beginPath();
+
+    // Move to the first point
+    this.ctx.moveTo(points[0][0], points[0][1]);
+
+    // Draw lines to the rest of the points
+    for (var i = 1; i < points.length; i++) {
+      this.ctx.lineTo(points[i][0], points[i][1]);
+    }
+
+    // Close the path to connect the last point to the first
+    this.ctx.closePath();
+
+    // Fill the inside of the path with the specified color
+    this.ctx.fill();
+
+    // Draw the stroke of the path with the specified color
+    this.ctx.stroke();
+  }
 
   private toWorld(x: number, y: number): { x: number; y: number } {
     // convert screen to world coords
@@ -285,36 +338,6 @@ export class CanvasInteraction {
     point.x = point.x * IM[0] + point.y * IM[2];
     point.y = point.x * IM[1] + point.y * IM[3];
     return point;
-  }
-  private addMarker(x: number, y: number, type: number) {
-    const marker = new Nucleus(x, y, type);
-    this.nuclei.append(marker);
-    this.drawImageWithMarkers();
-  }
-
-  //TODO: change data to actual data.
-//   public addFiber() {
-//     const pointer = new Fiber(0, [
-//       [100, 100],
-//       [200, 50],
-//       [300, 150],
-//       [350, 100],
-//       [400, 200],
-//       [350, 250],
-//       [250, 200],
-//       [200, 300],
-//       [100, 250],
-//       [150, 150],
-//       [100, 100],
-//     ]);
-//     this.fibers.append(pointer);
-//   }
-
-  public showNuclei(show: boolean): void {
-    this.showingNuclei = show;
-  }
-  public showFibers(show: boolean): void {
-    this.showingFibers = show;
   }
 
   private modifyColorOfImage() {
@@ -328,7 +351,7 @@ export class CanvasInteraction {
 
     for (let i = 0; i < data.length; i += 4) {
       if (this.imageColors.isRedRemoved) {
-        data[i] = 0; 
+        data[i] = 0;
       }
 
       if (this.imageColors.isGreenRemoved) {
@@ -336,21 +359,12 @@ export class CanvasInteraction {
       }
 
       if (this.imageColors.isBlueRemoved) {
-        data[i + 2] = 0; 
+        data[i + 2] = 0;
       }
     }
     this.ctx.putImageData(imageData, 0, 0);
   }
 
-  public updateChannels(
-    redChannelEnabled: boolean,
-    greenChannelEnabled: boolean,
-    blueChannelEnabled: boolean,
-  ) {
-    this.imageColors.isBlueRemoved = !blueChannelEnabled;
-    this.imageColors.isGreenRemoved = !greenChannelEnabled;
-    this.imageColors.isRedRemoved = !redChannelEnabled;
-  }
 }
 
 // interface rectangle {
