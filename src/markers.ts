@@ -4,11 +4,10 @@ export type NucleusJSON = {
   Ypos: number;
   id: number;
   type: number;
-  radius: any; // Update this type to the actual type of the 'getRadius()' method
-  color: string;
 };
 export type FiberJSON = {
   fiberPath: [number, number][];
+  id: number;
 };
 /**
  * Class holding the data associated with a single nucleus.
@@ -20,11 +19,13 @@ export class Nucleus {
   private Ypos: number;
   private id: number;
   private type: number;
+  private idImage: number;
   private static counter = 0;
-  constructor(Xpos: number, Ypos: number, type: number) {
+  constructor(Xpos: number, Ypos: number, type: number,idImage:number) {
     this.Xpos = Xpos;
     this.Ypos = Ypos;
     this.id = Nucleus.counter;
+    this.idImage = idImage;
     this.type = type;
     Nucleus.counter++;
   }
@@ -39,6 +40,9 @@ export class Nucleus {
   }
   getId() {
     return this.id;
+  }
+  getImageId() {
+    return this.idImage;
   }
   getRadius(): any {
     return 5;
@@ -58,8 +62,9 @@ export class Nucleus {
         Xpos: this.getXpos(),
         Ypos: this.getYpos(),
         type: this.getType(),
-        radius: this.getRadius(),
-        color: this.getColor(),
+        // idImage : this.getImageId()
+        // radius: this.getRadius(),
+        // color: this.getColor(),
     }
   }
 }
@@ -123,16 +128,23 @@ export class Nuclei {
  * Class holding the data associated with a single fiber.
  */
 export class Fiber {
-  id: number;
+  private id: number;
   position: [number, number][] = [];
-
-  constructor(id: number, position: [number, number][]) {
-    this.id = id;
+  private idImage:number;
+  private static counter = 0;
+  constructor( position: [number, number][], idImage: number) {
+    this.id = Fiber.counter;
+    this.idImage = idImage;
     this.position = position;
+    Fiber.counter++;
   }
 
-  public toJSON():{fiberPath : [number, number][] }{
-    return {fiberPath : this.position}
+  public toJSON():FiberJSON{
+    return {
+      fiberPath : this.position,
+      id:this.id,
+      // idImage: this.idImage
+    }
   }
 }
 

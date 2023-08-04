@@ -1,15 +1,37 @@
 import { ImageLayer } from "./imageLayer";
+import { NucleusJSON, FiberJSON } from "./markers";
 
+type data_data =  {
+  [imageId: string]: {
+    nameImage: string;
+    dataUrlBase64: string;
+    FiberData: FiberJSON[];
+    NucleiData: NucleusJSON[];
+  };
+};
+export type data = {
+  title: string;
+  data: {
+    [imageId: string]: {
+      nameImage: string;
+      dataUrlBase64: string;
+      FiberData: FiberJSON[];
+      NucleiData: NucleusJSON[];
+    };
+  };
+};
 export class FileTable {
   private layers: Set<ImageLayer>;
   private activeLayer: ImageLayer | undefined;
   private checkboxedlayers: Set<ImageLayer>;
-  private title:string;
-  constructor(projectName:string) {
+  private title: string;
+  private pathToSave:string;
+  constructor(projectName: string, pathToSaveFile:string) {
     this.layers = new Set<ImageLayer>();
     this.checkboxedlayers = new Set<ImageLayer>();
     this.activeLayer = undefined;
     this.title = projectName;
+    this.pathToSave = pathToSaveFile;
 
     this.selectAllCardsEventListener();
     this.deleteCheckedCardsEventListener();
@@ -251,56 +273,64 @@ export class FileTable {
       this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
     });
   }
-  
-  // FIXME: is na processing steeds zelfde checkboxedLayers, wss , dus bij getToProcessFiles, checkboxedLayers kopieren naar nieuwe variable. 
+
+  // FIXME: is na processing steeds zelfde checkboxedLayers, wss , dus bij getToProcessFiles, checkboxedLayers kopieren naar nieuwe variable.
   public drawProcessesFiles(result: {
     nucleiIn: [number, number][];
     nucleiOut: [number, number][];
     fiber: [number, number][];
   }) {
-    this.checkboxedlayers.forEach((layer)=>{
-      for (const [x,y] of result.nucleiIn) {
-        layer.canvasElement.canvasTransform.addMarker(x,y,0)//TODO: change type correctly
+    this.checkboxedlayers.forEach((layer) => {
+      for (const [x, y] of result.nucleiIn) {
+        layer.canvasElement.canvasTransform.addMarker(x, y, 0); //TODO: change type correctly
       }
-    })
-    this.checkboxedlayers.forEach((layer)=>{
-      for (const [x,y] of result.nucleiOut) {
-        layer.canvasElement.canvasTransform.addMarker(x,y,1)//TODO: change type correctly
+    });
+    this.checkboxedlayers.forEach((layer) => {
+      for (const [x, y] of result.nucleiOut) {
+        layer.canvasElement.canvasTransform.addMarker(x, y, 1); //TODO: change type correctly
       }
-    })
-    this.checkboxedlayers.forEach((layer)=>{
-        layer.canvasElement.canvasTransform.addFiber(result.fiber)
-    })
+    });
+    this.checkboxedlayers.forEach((layer) => {
+      layer.canvasElement.canvasTransform.addFiber(result.fiber);
+    });
   }
 
-  public getToProcessFiles() {
+  public getProcessingFiles() {
     const allLayersImages: {
-      [key: string]: { arr: Uint8ClampedArray; width: number; height: number };
+      [key: string]: string;
     } = {};
     this.checkboxedlayers.forEach((layer) => {
-      const imgData: ImageData =
-        layer.canvasElement.canvasTransform.getImageData();
-      const oneDimArray = imgData.data;
-      const width = imgData.width;
-      const height = imgData.height;
-      allLayersImages[layer.getId()] = {
-        arr: oneDimArray,
-        width: width,
-        height: height,
-      }; // in python met numpy reshape veranderen.
+      const imgData = layer.canvasElement.getHTMLImage();
+      const dataUrlBase64 = imgData.src;
+      allLayersImages[layer.getId()] = dataUrlBase64;
     });
     return allLayersImages;
   }
 
-  // FIXME:
-  public getToSaveData() {
-    const SAVE_DATA:{title:string,data:Array<{}>} = {
+  public getSavingData():data {
+    const SAVE_DATA:data = {
       title: this.title,
-      data: []
-    }
-    this.layers.forEach((layer)=>{
-      SAVE_DATA.data.push(layer.toJSON());
-    })
+      data: {},
+    };
+    this.layers.forEach((layer) => {
+      const imgData = layer.canvasElement.getHTMLImage();
+      const dataUrlBase64 = imgData.src;
+      SAVE_DATA.data[`${layer.getId}`] = {
+        nameImage: layer.cardElement.getName(),
+        dataUrlBase64: dataUrlBase64,
+        FiberData: layer.canvasElement.canvasTransform.getFibers().fibers,
+        NucleiData: layer.canvasElement.canvasTransform.getNuclei().nuclei,
+      };
+    });
     return SAVE_DATA;
+  }
+
+  public getPathToSave():string{
+    return this.pathToSave;
+  }
+
+  // FIXME:
+  public loadProject(data:data_data) {
+    throw new Error('Method not implemented.');
   }
 }

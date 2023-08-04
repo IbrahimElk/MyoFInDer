@@ -22,12 +22,13 @@ export class CanvasInteraction {
   private transform: transformationObject;
   private showingNuclei: boolean;
   private showingFibers: boolean;
-
-  constructor(canvas: HTMLCanvasElement, image: HTMLImageElement) {
+  private idImage :number;
+  constructor(canvas: HTMLCanvasElement, image: HTMLImageElement,id:number) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     this.nuclei = new Nuclei();
     this.fibers = new Fibers();
+    this.idImage = id;
 
     this.image = image;
     this.transform = {
@@ -92,13 +93,13 @@ export class CanvasInteraction {
     this.restoreCanvas();
   }
 
-  public getImageData(){
-    this.clearCanvas();
-    this.ctx.drawImage(this.image, 0, 0);
-    const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    this.drawImageWithMarkers();
-    return imgData;
-  }
+  // public getImageData(){
+  //   this.clearCanvas();
+  //   this.ctx.drawImage(this.image, 0, 0);
+  //   const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+  //   this.drawImageWithMarkers();
+  //   return imgData;
+  // }
 
   public clearCanvas() {
     this.ctx.save();
@@ -125,13 +126,13 @@ export class CanvasInteraction {
   }
 
   public addMarker(x: number, y: number, type: number) {
-    const marker = new Nucleus(x, y, type);
+    const marker = new Nucleus(x, y, type,this.idImage);
     this.nuclei.append(marker);
     this.drawImageWithMarkers();
   }
   
   public addFiber(fiberPoints :[number,number][]) {
-    const pointer = new Fiber(0, fiberPoints);
+    const pointer = new Fiber(fiberPoints, this.idImage);
     this.fibers.append(pointer);
   }
 

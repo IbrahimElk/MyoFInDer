@@ -23,25 +23,29 @@ export class ImageLayer {
   public getId() {
     return this.id;
   }
-  //TODO: ook nog andere gegevns moeten opgeslagen worden, zoals ratio , ...  
   public toJSON() {
-    return  {}
-  //     this.canvasElement.canvasTransform.getImageData();
-  //     this.canvasElement.canvasTransform.getFibers();
-  //     this.canvasElement.canvasTransform.getNuclei();
+    return  {
+     FiberData:  this.canvasElement.canvasTransform.getFibers().fibers,
+     NucleiData: this.canvasElement.canvasTransform.getNuclei().nuclei,
+    }
   }
 }
 
 class CanvasEntry {
   private htmlCanvas: HTMLCanvasElement;
   private id: number;
-
+  private img:HTMLImageElement;
   public canvasTransform: CanvasInteraction;
 
   constructor(img: HTMLImageElement, id: number) {
     this.id = id;
+    this.img = img;
     this.htmlCanvas = this.createHTMLCanvas();
-    this.canvasTransform = new CanvasInteraction(this.htmlCanvas, img);
+    this.canvasTransform = new CanvasInteraction(this.htmlCanvas, img,id);
+  }
+
+  public getHTMLImage():HTMLImageElement{
+    return this.img;
   }
 
   private createHTMLCanvas(): HTMLCanvasElement {
