@@ -104,6 +104,14 @@ export class Nuclei {
     return this.nuclei.filter((nuc) => nuc.getType() === 1).length;
   }
 
+  public getRatio(): number {
+    return this.getNucleiInCount()/this.getTotalNucleiCount();
+  }
+
+  public getTotalNucleiCount(): number {
+    return this.getNucleiInCount()+this.getNucleiOutCount();
+  }
+
   public [Symbol.iterator](): IterableIterator<Nucleus> {
     return this.nuclei.values();
   }
@@ -129,16 +137,31 @@ export class Nuclei {
  */
 export class Fiber {
   private id: number;
-  position: [number, number][] = [];
+  private position: [number, number][] = [];
   private idImage:number;
+  private area:number;
   private static counter = 0;
-  constructor( position: [number, number][], idImage: number) {
+  private ratio:number;
+  constructor( position: [number, number][], idImage: number, area:number,ratio :number) {
     this.id = Fiber.counter;
     this.idImage = idImage;
+    this.area = area;
+    this.ratio = ratio;
     this.position = position;
     Fiber.counter++;
   }
-
+  public getPosition(){
+    return this.position;
+  }
+  public getidImage(){
+    return this.idImage;
+  }
+  public getArea(){
+    return this.area;
+  }
+  public getRatio(){
+    return this.ratio;
+  }
   public toJSON():FiberJSON{
     return {
       fiberPath : this.position,
@@ -186,6 +209,21 @@ export class Fibers {
 
   public getLength(): number {
     return this.fibers.length;
+  }
+
+  public getArea(): number {
+    let totalArea = 0;
+    this.fibers.forEach((fiber)=>{
+      totalArea += fiber.getArea();
+    });
+    return totalArea;
+  }
+  public getRatio():number {
+    let totalRatio = 0;
+    this.fibers.forEach((fiber)=>{
+      totalRatio += fiber.getRatio();
+    });
+    return totalRatio;
   }
 
   public toJSON(): {fibers: FiberJSON[]} {

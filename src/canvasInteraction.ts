@@ -9,7 +9,12 @@ interface transformationObject {
   lastX: number;
   lastY: number;
 }
-
+export interface MyCustomEvent extends CustomEventInit 
+{  positive: number,
+  total: number,
+  ratio:number,
+  fiberRatio: number
+} 
 export class CanvasInteraction {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -129,11 +134,26 @@ export class CanvasInteraction {
     const marker = new Nucleus(x, y, type,this.idImage);
     this.nuclei.append(marker);
     this.drawImageWithMarkers();
+    this.fireEvent();
   }
   
-  public addFiber(fiberPoints :[number,number][]) {
-    const pointer = new Fiber(fiberPoints, this.idImage);
+  public addFiber(fiberPoints :[number,number][], area: number) {
+    const ratioFiber = area / (this.image.width* this.image.height) ;
+    const pointer = new Fiber(fiberPoints, this.idImage, area, ratioFiber);
     this.fibers.append(pointer);
+    this.fireEvent();
+  }
+
+  private fireEvent() {
+    const event:MyCustomEvent = {  
+      positive: this.nuclei.getNucleiInCount(),
+        total: this.nuclei.getTotalNucleiCount(),
+        ratio:this.nuclei.getRatio(),
+        fiberRatio: this.fibers.getRatio()
+      
+    }
+    const markerAddedEvent = new CustomEvent("markerAdded", event );
+    this.canvas.dispatchEvent(markerAddedEvent);
   }
 
   public getNuclei(): { nuclei: NucleusJSON[] }{
@@ -304,7 +324,7 @@ export class CanvasInteraction {
   }
 
   private drawFiber(marker: Fiber) {
-    const points = marker.position;
+    const points = marker.getPosition();
     // Set stroke and fill colors
     this.ctx.strokeStyle = "magenta";
     this.ctx.fillStyle = "rgba(255, 182, 193, 0.5)";

@@ -1,5 +1,20 @@
 import { ImageLayer } from "./imageLayer";
 import { NucleusJSON, FiberJSON } from "./markers";
+export type result = {
+  [layerid:string] : {
+    nuclei: {
+      nucleiIn: [number, number][];
+      nucleiOut: [number, number][];
+    }
+    fibers: {
+      [fiberID:string]:
+      {
+        fiberPath : [number, number][];
+        fiberArea : number;
+      }
+    }
+  }
+};
 
 type data_data =  {
   [imageId: string]: {
@@ -21,13 +36,15 @@ export type data = {
   };
 };
 export class FileTable {
-  private layers: Set<ImageLayer>;
+  // private layers: Set<ImageLayer>;
+  private mappedLayers: Map<string, ImageLayer>;
   private activeLayer: ImageLayer | undefined;
   private checkboxedlayers: Set<ImageLayer>;
   private title: string;
   private pathToSave:string;
   constructor(projectName: string, pathToSaveFile:string) {
-    this.layers = new Set<ImageLayer>();
+    // this.layers = new Set<ImageLayer>();
+    this.mappedLayers = new Map<string,ImageLayer>();
     this.checkboxedlayers = new Set<ImageLayer>();
     this.activeLayer = undefined;
     this.title = projectName;
@@ -46,16 +63,16 @@ export class FileTable {
     ) as HTMLInputElement;
 
     selectAllcheckBox.addEventListener("click", () => {
-      this.layers.forEach((entry: ImageLayer) => {
-        const checkbox = entry.cardElement
+      this.mappedLayers.forEach((value: ImageLayer) => {
+        const checkbox = value.cardElement
           .getHtmlCard()
           .querySelector(".card-checkbox") as HTMLInputElement;
         if (selectAllcheckBox.checked) {
           checkbox.checked = true;
-          this.checkboxedlayers.add(entry);
+          this.checkboxedlayers.add(value);
         } else {
           checkbox.checked = false;
-          this.checkboxedlayers.delete(entry);
+          this.checkboxedlayers.delete(value);
         }
       });
     });
@@ -70,7 +87,7 @@ export class FileTable {
       this.checkboxedlayers.forEach((entry: ImageLayer) => {
         entry.canvasElement.deleteHTMLCanvas();
         entry.cardElement.deleteHtmlCard();
-        this.layers.delete(entry);
+        this.mappedLayers.delete(entry.getId());
       });
       this.checkboxedlayers.clear();
     });
@@ -165,7 +182,7 @@ export class FileTable {
     blue: boolean;
   }) => {
     // Update the canvas settings for all the entries
-    this.layers.forEach((entry) => {
+    this.mappedLayers.forEach((entry) => {
       entry.canvasElement.canvasTransform.updateChannels(
         obj.red,
         obj.green,
@@ -189,7 +206,7 @@ export class FileTable {
     fibersCheckbox.checked = true;
 
     nucleiCheckbox.addEventListener("change", () => {
-      this.layers.forEach((entry) => {
+      this.mappedLayers.forEach((entry) => {
         entry.canvasElement.canvasTransform.showNuclei(nucleiCheckbox.checked);
         if (this.activeLayer) {
           this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
@@ -197,7 +214,7 @@ export class FileTable {
       });
     });
     fibersCheckbox.addEventListener("change", () => {
-      this.layers.forEach((entry) => {
+      this.mappedLayers.forEach((entry) => {
         entry.canvasElement.canvasTransform.showFibers(fibersCheckbox.checked);
         if (this.activeLayer) {
           this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
@@ -211,11 +228,11 @@ export class FileTable {
     img.src = location;
     img.addEventListener("load", () => {
       const newLayer = new ImageLayer(img, name);
-      if (this.layers.size === 0) {
+      if (this.mappedLayers.size === 0) {
         this.activeLayer = newLayer;
         this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
       }
-      this.layers.add(newLayer);
+      this.mappedLayers.set(newLayer.getId(),newLayer)
       this.initialiseDeleteCardEventListener(newLayer);
       this.initialiseCheckingBoxEventListener(newLayer);
       this.initialiseSelectCardEventListener(newLayer);
@@ -236,7 +253,7 @@ export class FileTable {
         // FIXME: change activeCard if activeCard will be deleted.
         entry.cardElement.deleteHtmlCard();
         entry.canvasElement.deleteHTMLCanvas();
-        this.layers.delete(entry);
+        this.mappedLayers.delete(entry.getId());
         this.checkboxedlayers.delete(entry);
       }
     });
@@ -274,25 +291,24 @@ export class FileTable {
     });
   }
 
-  // FIXME: is na processing steeds zelfde checkboxedLayers, wss , dus bij getToProcessFiles, checkboxedLayers kopieren naar nieuwe variable.
-  public drawProcessesFiles(result: {
-    nucleiIn: [number, number][];
-    nucleiOut: [number, number][];
-    fiber: [number, number][];
-  }) {
-    this.checkboxedlayers.forEach((layer) => {
-      for (const [x, y] of result.nucleiIn) {
-        layer.canvasElement.canvasTransform.addMarker(x, y, 0); //TODO: change type correctly
+  public drawProcessesFiles(result: result) {
+    for (const layerId in result) {
+      const layer = this.mappedLayers.get(layerId);
+      if(!layer){
+        continue ;
       }
-    });
-    this.checkboxedlayers.forEach((layer) => {
-      for (const [x, y] of result.nucleiOut) {
-        layer.canvasElement.canvasTransform.addMarker(x, y, 1); //TODO: change type correctly
+      for (const marker of result[layerId].nuclei.nucleiIn){
+        layer.canvasElement.canvasTransform.addMarker(marker[0],marker[1],0);
       }
-    });
-    this.checkboxedlayers.forEach((layer) => {
-      layer.canvasElement.canvasTransform.addFiber(result.fiber);
-    });
+
+      for (const marker of result[layerId].nuclei.nucleiOut){
+        layer.canvasElement.canvasTransform.addMarker(marker[0],marker[1],1);
+      }
+      for (const fiberID in result[layerId].fibers){
+        const fiberObj = result[layerId].fibers[fiberID]
+        layer.canvasElement.canvasTransform.addFiber(fiberObj.fiberPath,fiberObj.fiberArea);
+      }
+    }
   }
 
   public getProcessingFiles() {
@@ -312,7 +328,7 @@ export class FileTable {
       title: this.title,
       data: {},
     };
-    this.layers.forEach((layer) => {
+    this.mappedLayers.forEach((layer) => {
       const imgData = layer.canvasElement.getHTMLImage();
       const dataUrlBase64 = imgData.src;
       SAVE_DATA.data[`${layer.getId}`] = {
@@ -325,12 +341,35 @@ export class FileTable {
     return SAVE_DATA;
   }
 
+  public getCSV(){
+    var data = [
+      ['Image names', 'Total number of nuclei', 'Number of tropomyosin positive nuclei','Fusion index','Fiber area ratio'],
+    ];
+    this.mappedLayers.forEach((layer) => {
+      data.push([
+        layer.cardElement.getName(),
+        layer.cardElement.getTotal(),
+        layer.cardElement.getPositive(),
+        layer.cardElement.getRatio(),
+        layer.cardElement.getFibreArea(),
+      ])
+    });
+    // Each column is separated by ";" and new line "\n" for next row
+    let csvContent = '';
+    data.forEach((arr, index)=> {
+      const rowString = arr.join(';');
+      csvContent += index < data.length ? rowString + '\n' : rowString;
+    });
+    return csvContent;
+  }
+
   public getPathToSave():string{
     return this.pathToSave;
   }
 
-  // FIXME:
   public loadProject(data:data_data) {
-    throw new Error('Method not implemented.');
+    for (const imageID in data){
+      //FIXME: TODO:
+    }
   }
 }

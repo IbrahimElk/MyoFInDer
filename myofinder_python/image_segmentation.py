@@ -122,7 +122,7 @@ class Image_segmentation:
                                     fiber_threshold)
 
         del fiber_channel
-
+        # FIXME: voor elke fiber apart doen + shoelace algoithm toepassen alst sneller is? 
         # Calculating the area of fibers over the total area
         area = np.count_nonzero(mask) / mask.shape[0] / mask.shape[1]
 
