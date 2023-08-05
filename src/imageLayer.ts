@@ -111,14 +111,14 @@ class CardEntry {
     const cardDiv = document.createElement("div");
     const cardTitleDiv = document.createElement("div");
     const cardInfoDiv = document.createElement("div");
-    const totalItemDiv = this.createCardInfoItem("Total:", `${this.total}`);
+    const totalItemDiv = this.createCardInfoItem("Total", `${this.total}`);
     const positiveItemDiv = this.createCardInfoItem(
-      "Positive:",
+      "Positive",
       `${this.positive}`
     );
-    const ratioItemDiv = this.createCardInfoItem("Ratio:", `${this.ratio}`);
+    const ratioItemDiv = this.createCardInfoItem("Ratio", `${this.ratio}`);
     const fiberAreaItemDiv = this.createCardInfoItem(
-      "Fiber Area:",
+      "Fiber Area",
       `${this.fibreArea}`
     );
     const checkboxInput = document.createElement("input");
@@ -154,7 +154,8 @@ class CardEntry {
     const itemDiv = document.createElement("div");
     const labelElement = document.createElement("label");
     const valueElement = document.createElement("span");
-    valueElement.classList.add(label);
+    console.log(label);
+    valueElement.id = label;
     labelElement.textContent = label;
     valueElement.textContent = value;
 
@@ -220,10 +221,10 @@ class CardEntry {
 
 
 
-    const totalValue = card.querySelector(".total-value");
-    const positiveValue = card.querySelector(".positive-value");
-    const ratioValue = card.querySelector(".ratio-value");
-    const fiberAreaValue = card.querySelector(".fiber-area-value");
+    const totalValue = card.querySelector("#total-value");
+    const positiveValue = card.querySelector("#positive-value");
+    const ratioValue = card.querySelector("#ratio-value");
+    const fiberAreaValue = card.querySelector("#fiber-area-value");
 
     if (totalValue && positiveValue && ratioValue && fiberAreaValue) {
       totalValue.textContent = total.toString();

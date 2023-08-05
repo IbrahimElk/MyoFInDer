@@ -223,7 +223,8 @@ export class FileTable {
     });
   }
 
-  public addCard(name: string, location: string): void {
+  public async addCard(name: string, location: string):  Promise<ImageLayer>{
+    return new Promise((resolve, reject) =>{
     const img = new Image();
     img.src = location;
     img.addEventListener("load", () => {
@@ -236,6 +237,11 @@ export class FileTable {
       this.initialiseDeleteCardEventListener(newLayer);
       this.initialiseCheckingBoxEventListener(newLayer);
       this.initialiseSelectCardEventListener(newLayer);
+      resolve(newLayer); 
+    });
+    img.addEventListener("error", (error) => {
+      reject(error); 
+    });
     });
   }
 
@@ -331,7 +337,7 @@ export class FileTable {
     this.mappedLayers.forEach((layer) => {
       const imgData = layer.canvasElement.getHTMLImage();
       const dataUrlBase64 = imgData.src;
-      SAVE_DATA.data[`${layer.getId}`] = {
+      SAVE_DATA.data[`${layer.getId()}`] = {
         nameImage: layer.cardElement.getName(),
         dataUrlBase64: dataUrlBase64,
         FiberData: layer.canvasElement.canvasTransform.getFibers().fibers,
@@ -367,9 +373,25 @@ export class FileTable {
     return this.pathToSave;
   }
 
-  public loadProject(data:data_data) {
+  public async loadProject(data:data_data) {
     for (const imageID in data){
-      //FIXME: TODO:
+      const imageData = data[imageID]
+      const newlayer: ImageLayer = await this.addCard(imageData.nameImage,imageData.dataUrlBase64);
+      this.loadingMarkers(newlayer,imageData.NucleiData);
+      this.loadingFibers(newlayer, imageData.FiberData);
     }
   }
+
+  private loadingMarkers(layer:ImageLayer,nucs : NucleusJSON[]){
+    for (const marker of nucs){
+      layer.canvasElement.canvasTransform.addMarker(marker.Xpos,marker.Ypos,marker.type);
+    }
+  }
+  private loadingFibers(layer : ImageLayer, fibs : FiberJSON[]){
+    for (const pointer of fibs){
+      layer.canvasElement.canvasTransform.addFiber(pointer.fiberPath,pointer.area);
+    }
+  }
+
+
 }

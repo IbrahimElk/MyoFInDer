@@ -3,13 +3,18 @@ import {
   readBinaryFile,
   createDir,
   writeFile,
+  BaseDirectory,
+  exists
 } from "@tauri-apps/api/fs";
-import {
-  join
-} from "@tauri-apps/api/path";
+// import {
+//   join
+// } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/tauri";
 import { FileTable, result } from "./fileTable";
 import { data } from "./fileTable";
+
+
+
 const FILETABLE = new FileTable("my_project", "path/to/save/file");
 
 // --------------------------------------------------------------------------------------
@@ -65,22 +70,26 @@ const saveAsButton = document.getElementById(
 saveAsButton.addEventListener("click", async () => {
   const DATA = FILETABLE.getSavingData();
   const path = FILETABLE.getPathToSave();//FIXME: kdenk via html, dan krijg je de pad. 
-
   // Convert DATA JSON to binary
   const jsonData = JSON.stringify(DATA);
   const encoder = new TextEncoder();
   const binaryData = encoder.encode(jsonData);
-
   // vb. const path = '/path/to/your/folder/';
-  await writeBinaryFile(path+"projectName.bin", binaryData);
-  await extractAndSaveImages(DATA, path+"images/");
-  await writeFile(path+"projectName.csv",FILETABLE.getCSV())
+  const existing = await exists('projectName', { dir: BaseDirectory.Desktop });
+  if(!existing){
+    await createDir("projectName",{ dir: BaseDirectory.Desktop });
+  }
+  await writeFile("projectName/project.csv",FILETABLE.getCSV(),{ dir: BaseDirectory.Desktop });
+  await writeBinaryFile("projectName/project.bin", binaryData,{ dir: BaseDirectory.Desktop } );
+  await extractAndSaveImages("projectName/images/",DATA);
 });
 
-async function extractAndSaveImages(saveData: data, folderPath: string) {
+async function extractAndSaveImages(folderPath: string, saveData:data) {
   // Create the "images" folder if it doesn't exist
-  await createDir(folderPath);
-
+  const existing = await exists(folderPath, { dir: BaseDirectory.Desktop });
+  if(!existing){
+    await createDir(folderPath,{ dir: BaseDirectory.Desktop });
+  }
   // Loop through the data object and extract image data
   for (const imageId in saveData.data) {
     const imageData = saveData.data[imageId];
@@ -88,14 +97,17 @@ async function extractAndSaveImages(saveData: data, folderPath: string) {
 
     // Convert base64 string to binary
     const base64Data = dataUrlBase64.replace(/^data:image\/\w+;base64,/, "");
-    const binaryData = Buffer.from(base64Data, "base64");
+    // Decode the base64 data into binary format
+    const binaryString = atob(base64Data);
 
-    // Determine file extension based on dataUrlBase64 content type
-    const extension = dataUrlBase64.split("/")[1].split(";")[0];
+    // Create a Uint8Array from the binary string
+    const length = binaryString.length;
+    const binaryArray = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      binaryArray[i] = binaryString.charCodeAt(i);
+    }
 
-    // Write the binary data to the "images" folder
-    const imagePath = await join(folderPath, `${nameImage}.${extension}`);
-    await writeBinaryFile(imagePath, binaryData);
+    await writeBinaryFile(folderPath+nameImage, binaryArray, { dir: BaseDirectory.Desktop});
   }
 }
 
@@ -107,9 +119,9 @@ const loadProjectButton = document.getElementById(
   "loadProjectButton"
 ) as HTMLInputElement;
 //TODO: this path chosen by the user.!!
-const chosenPath = "path";
 
 loadProjectButton.addEventListener("click", async () => {
+  const chosenPath = "path";
   const loadedBinary = await readBinaryFile(chosenPath);
 
   // Convert binary to DATA JSON

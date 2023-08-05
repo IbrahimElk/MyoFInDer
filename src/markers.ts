@@ -6,6 +6,7 @@ export type NucleusJSON = {
   type: number;
 };
 export type FiberJSON = {
+  area: number;
   fiberPath: [number, number][];
   id: number;
 };
@@ -164,6 +165,7 @@ export class Fiber {
   }
   public toJSON():FiberJSON{
     return {
+      area: this.area,
       fiberPath : this.position,
       id:this.id,
       // idImage: this.idImage
