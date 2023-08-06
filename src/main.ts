@@ -1,21 +1,9 @@
-import {
-  writeBinaryFile,
-  readBinaryFile,
-  createDir,
-  writeFile,
-  BaseDirectory,
-  exists
-} from "@tauri-apps/api/fs";
-// import {
-//   join
-// } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/tauri";
-import { FileTable, result } from "./fileTable";
-import { data } from "./fileTable";
+import { open, save,message } from "@tauri-apps/api/dialog";
+import { FileTable, result, data } from "./fileTable";
 
-
-
-const FILETABLE = new FileTable("my_project", "path/to/save/file");
+const FILETABLE = new FileTable();
+window.addEventListener("contextmenu", (e) => e.preventDefault());
 
 // --------------------------------------------------------------------------------------
 // LOADING IMAGES
@@ -47,6 +35,7 @@ loadImagesButton.addEventListener("change", () => {
 // --------------------------------------------------------------------------------------
 // PROCESSING IMAGES.
 // --------------------------------------------------------------------------------------
+
 const processImagesButton = document.getElementById(
   "processImagesButton"
 ) as HTMLInputElement;
@@ -63,53 +52,28 @@ processImagesButton.addEventListener("click", async () => {
 // --------------------------------------------------------------------------------------
 // SAVING DATA AND IMAGES.
 // --------------------------------------------------------------------------------------
+
 const saveAsButton = document.getElementById(
   "saveAsButton"
 ) as HTMLInputElement;
 
 saveAsButton.addEventListener("click", async () => {
-  const DATA = FILETABLE.getSavingData();
-  const path = FILETABLE.getPathToSave();//FIXME: kdenk via html, dan krijg je de pad. 
-  // Convert DATA JSON to binary
-  const jsonData = JSON.stringify(DATA);
-  const encoder = new TextEncoder();
-  const binaryData = encoder.encode(jsonData);
-  // vb. const path = '/path/to/your/folder/';
-  const existing = await exists('projectName', { dir: BaseDirectory.Desktop });
-  if(!existing){
-    await createDir("projectName",{ dir: BaseDirectory.Desktop });
+  const project_path = await save();
+  if(!project_path){
+    return;
   }
-  await writeFile("projectName/project.csv",FILETABLE.getCSV(),{ dir: BaseDirectory.Desktop });
-  await writeBinaryFile("projectName/project.bin", binaryData,{ dir: BaseDirectory.Desktop } );
-  await extractAndSaveImages("projectName/images/",DATA);
+  const parts = project_path.split("/");
+  const lastFolder = parts[parts.length - 1];
+
+  const data:data = FILETABLE.getSavingData();
+  data.title = lastFolder;
+
+  await invoke("save", {
+    projectPath: project_path, // Corrected argument name here
+    csvData: FILETABLE.getCSV(),
+    data: data,
+  });
 });
-
-async function extractAndSaveImages(folderPath: string, saveData:data) {
-  // Create the "images" folder if it doesn't exist
-  const existing = await exists(folderPath, { dir: BaseDirectory.Desktop });
-  if(!existing){
-    await createDir(folderPath,{ dir: BaseDirectory.Desktop });
-  }
-  // Loop through the data object and extract image data
-  for (const imageId in saveData.data) {
-    const imageData = saveData.data[imageId];
-    const { nameImage, dataUrlBase64 } = imageData;
-
-    // Convert base64 string to binary
-    const base64Data = dataUrlBase64.replace(/^data:image\/\w+;base64,/, "");
-    // Decode the base64 data into binary format
-    const binaryString = atob(base64Data);
-
-    // Create a Uint8Array from the binary string
-    const length = binaryString.length;
-    const binaryArray = new Uint8Array(length);
-    for (let i = 0; i < length; i++) {
-      binaryArray[i] = binaryString.charCodeAt(i);
-    }
-
-    await writeBinaryFile(folderPath+nameImage, binaryArray, { dir: BaseDirectory.Desktop});
-  }
-}
 
 // --------------------------------------------------------------------------------------
 // LOADING DATA AND IMAGES.
@@ -118,20 +82,31 @@ async function extractAndSaveImages(folderPath: string, saveData:data) {
 const loadProjectButton = document.getElementById(
   "loadProjectButton"
 ) as HTMLInputElement;
-//TODO: this path chosen by the user.!!
 
 loadProjectButton.addEventListener("click", async () => {
-  const chosenPath = "path";
-  const loadedBinary = await readBinaryFile(chosenPath);
+  const chosenPath = await open({
+    directory: true,
+    multiple: false,
+  }) as string | null;
+  if(!chosenPath) {
+    return;
+  }
+  const parts = chosenPath.split("/");
+  const lastFolder = parts[parts.length - 1];
+  const fullPath = chosenPath + "/" + lastFolder + ".bin";
 
+  const project:Int8Array = await invoke("load", {fullPath:fullPath});  
+  const projectBuffer = new Int8Array(project).buffer; // Convert Int8Array to ArrayBuffer
+
+  if(project.length === 0){
+    await message("No .bin file found in the directory.");
+    return;
+  }
   // Convert binary to DATA JSON
   const decoder = new TextDecoder();
-  const jsonData = decoder.decode(loadedBinary);
-  const DATA: data = JSON.parse(jsonData);
+  const jsonData = decoder.decode(projectBuffer);
+  const DATA = JSON.parse(jsonData);
 
-  const FILETABLE = new FileTable(DATA.title, chosenPath);
+  const FILETABLE = new FileTable();
   FILETABLE.loadProject(DATA.data);
 });
-
-window.addEventListener("contextmenu", (e) => e.preventDefault());
-

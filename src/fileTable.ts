@@ -16,6 +16,11 @@ export type result = {
   }
 };
 
+export type data = {
+  title: string;
+  data: data_data
+};
+
 type data_data =  {
   [imageId: string]: {
     nameImage: string;
@@ -24,31 +29,17 @@ type data_data =  {
     NucleiData: NucleusJSON[];
   };
 };
-export type data = {
-  title: string;
-  data: {
-    [imageId: string]: {
-      nameImage: string;
-      dataUrlBase64: string;
-      FiberData: FiberJSON[];
-      NucleiData: NucleusJSON[];
-    };
-  };
-};
+
 export class FileTable {
   // private layers: Set<ImageLayer>;
   private mappedLayers: Map<string, ImageLayer>;
   private activeLayer: ImageLayer | undefined;
   private checkboxedlayers: Set<ImageLayer>;
-  private title: string;
-  private pathToSave:string;
-  constructor(projectName: string, pathToSaveFile:string) {
+  constructor() {
     // this.layers = new Set<ImageLayer>();
     this.mappedLayers = new Map<string,ImageLayer>();
     this.checkboxedlayers = new Set<ImageLayer>();
     this.activeLayer = undefined;
-    this.title = projectName;
-    this.pathToSave = pathToSaveFile;
 
     this.selectAllCardsEventListener();
     this.deleteCheckedCardsEventListener();
@@ -331,7 +322,7 @@ export class FileTable {
 
   public getSavingData():data {
     const SAVE_DATA:data = {
-      title: this.title,
+      title: "",
       data: {},
     };
     this.mappedLayers.forEach((layer) => {
@@ -368,11 +359,6 @@ export class FileTable {
     });
     return csvContent;
   }
-
-  public getPathToSave():string{
-    return this.pathToSave;
-  }
-
   public async loadProject(data:data_data) {
     for (const imageID in data){
       const imageData = data[imageID]
@@ -381,7 +367,6 @@ export class FileTable {
       this.loadingFibers(newlayer, imageData.FiberData);
     }
   }
-
   private loadingMarkers(layer:ImageLayer,nucs : NucleusJSON[]){
     for (const marker of nucs){
       layer.canvasElement.canvasTransform.addMarker(marker.Xpos,marker.Ypos,marker.type);
@@ -392,6 +377,4 @@ export class FileTable {
       layer.canvasElement.canvasTransform.addFiber(pointer.fiberPath,pointer.area);
     }
   }
-
-
 }

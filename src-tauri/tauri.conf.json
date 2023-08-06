@@ -18,25 +18,28 @@
         "open": true 
       },
       "fs": {
+        "all": true
+      },
+      "dialog": {
         "all": true,
-        "scope": [
-          "$DESKTOP/**",
-          "$DESKTOP/*",
-          "$DESKTOP/",
-          "$DESKTOP"
-         ]
+        "ask": true,
+        "confirm": true, 
+        "message": true, 
+        "open": true, 
+        "save": true
+      },
+      "path": {
+        "all": true
       }
     },
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "myoFinder",
       "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
+        "icons/project_icon.png",
+        "icons/project_icon.icns",
+        "icons/project_icon.ico"
       ]
     },
     "security": {
