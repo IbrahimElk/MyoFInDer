@@ -11,12 +11,18 @@ use std::path::Path;
 use std::collections::HashMap;
 
 
+// -----------------------------------------------------------
+// -----------------------------------------------------------
+// FIXME: OUTDATED. 
 #[derive(Debug,Serialize, Deserialize)]
 struct NucleiData {
     nucleiIn: Vec<(i32,i32)>,
     nucleiOut: Vec<(i32,i32)>,
     fiber: Vec<(i32,i32)>,
 }
+
+// -----------------------------------------------------------
+// -----------------------------------------------------------
 
 #[derive(Debug,Serialize,Deserialize)]
 struct NucleusJSON {
@@ -47,6 +53,9 @@ struct Data {
     data: HashMap<String, ImageData>,
 }
 
+// -----------------------------------------------------------
+// -----------------------------------------------------------
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -62,14 +71,14 @@ fn main() {
 // SEND AND RECEIVE COMMAND
 // ----------------------------------------------------------------------------------------------------
 #[tauri::command]
-fn send_and_receive(input: &str) -> NucleiData {
+fn send_and_receive(input: &str) -> String {
     let rt = Runtime::new().unwrap();
-    let parsed_data = rt.block_on(async {
+    let async_data_str = rt.block_on(async {
         let response: Vec<u8> = send_and_receive_from_server(String::from(input)).await;
         let data_str = String::from_utf8(response).expect("Invalid UTF-8 data");
-        serde_json::from_str(&data_str).expect("JSON parsing error")
+        return data_str;
     });
-    return parsed_data;
+    return async_data_str;
 }
 
 async fn send_and_receive_from_server(json_data: String)-> Vec<u8> {

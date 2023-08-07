@@ -7,13 +7,12 @@ from pathlib import Path
 import cv2
 from typing import List, Tuple, Any
 
-# from _check_image import check_image
-
 # Table for converting color strings to channels, assuming BGR images
-numpy_color_to_int = {"red": 0,
+color_to_int = {"red": 0,
                       "green": 1,
                       "blue": 2}
 
+data_structure = dict[str, dict[str, dict[str, List[Tuple[float, float]]]]]
 
 class Image_segmentation:
     """Class for processing images, detecting fibers and nuclei."""
@@ -29,62 +28,14 @@ class Image_segmentation:
                  fiber_color: str,
                  fiber_threshold: int,
                  nuclei_threshold: int,
-                 small_objects_threshold: int) -> \
-            (Path, List[Tuple[np.ndarray, np.ndarray]],
-             List[Tuple[np.ndarray, np.ndarray]], Tuple[Any], float):
-        """Computes the nuclei positions and optionally the fibers positions.
+                 small_objects_threshold: int) -> data_structure:
+        self._remove_scale_bar(images)
 
-        Also returns whether the nuclei are inside or outside the fibers.
+        nuclei_channels = images[:, :, :, color_to_int[nuclei_color]]
+        fiber_channels = images[:, :, :, color_to_int[fiber_color]]
+        new_images = np.stack([nuclei_channels, fiber_channels], axis=-1)
 
-        Args:
-            path: The path to the image to process.
-            nuclei_color: The color of the nuclei, as a string.
-            fiber_color: The color of the fibers, as a string.
-            fiber_threshold: The gray level threshold above which a pixel is
-                considered to be part of a fiber.
-            nuclei_threshold: The gray level threshold above which a detected
-                nucleus is considered to be valid.
-            small_objects_threshold: Objects whose area is lower than this
-                value (in pixels) will not be considered.
-
-        Returns:
-            The list of nuclei outside the fibers, the list of nuclei inside
-            the fibers, the list of fiber contours, and the ratio of fiber area
-            over the total area.
-        """
-
-        # Converting colors from string to int
-        colors = {
-            "nuclei": numpy_color_to_int[nuclei_color],
-            "fiber": numpy_color_to_int[fiber_color]
-        }
-        for image in images:
-            # Removing the scale bar
-            image[(image[:, :, 0] > 50) &
-                    (image[:, :, 1] > 50) &
-                    (image[:, :, 2] > 50)] = (0, 0, 0)
-
-        nuclei_channel = images[:,:, :, colors["nuclei"]]
-        fiber_channel = images[:,:, :, colors["fiber"]]
-        new_images = np.stack([nuclei_channel, fiber_channel], axis=-1)
-
-        # del images
-
-        # Default parameters
-        radius = 10
-        maxima_threshold = 0.1
-        interior_threshold = 0.01
-        maxima_smooth = 0
-        interior_smooth = 0
-        maxima_index = 0
-        interior_index = -1
-        label_erosion = 0
-        fill_holes_threshold = 0
-        pixel_expansion = None
-        maxima_algorith = 'h_maxima'
-
-        # Actual nuclei detection function
-        labeled_image = self._app.predict(
+        labeled_images = self._app.predict(
             image=new_images,
             batch_size=4,
             image_mpp=None,
@@ -93,45 +44,45 @@ class Image_segmentation:
             preprocess_kwargs=dict(),
             postprocess_kwargs_whole_cell=dict(),
             postprocess_kwargs_nuclear={
-                'radius': radius,
-                'maxima_threshold': maxima_threshold,
-                'interior_threshold': interior_threshold,
-                'maxima_smooth': maxima_smooth,
-                'interior_smooth': interior_smooth,
-                'maxima_index': maxima_index,
-                'interior_index': interior_index,
-                'label_erosion': label_erosion,
+                'radius': 10,
+                'maxima_threshold': 0.1,
+                'interior_threshold': 0.01,
+                'maxima_smooth': 0,
+                'interior_smooth': 0,
+                'maxima_index': 0,
+                'interior_index': -1,
+                'label_erosion': 0,
                 'small_objects_threshold': small_objects_threshold,
-                'fill_holes_threshold': fill_holes_threshold,
-                'pixel_expansion': pixel_expansion,
-                'maxima_algorith': maxima_algorith,
+                'fill_holes_threshold': 0,
+                'pixel_expansion': None,
+                'maxima_algorith': 'h_maxima',
             })
 
-        # Removing useless axes on the output and nuclei channel
-        # labeled_image = np.squeeze(labeled_image)
+        imageid_dict = {}
+        for counter, (fiber_channel, nuclei_channel, labeled_image) in enumerate(zip(fiber_channels, nuclei_channels, labeled_images)):
+            labeled_image = np.squeeze(labeled_image)
 
-        # Getting the fiber mask
-        # mask = self._get_fiber_mask(fiber_channel,
-        #                             nuclei_channel,
-        #                             fiber_threshold)
-        
-        # Getting the position of the nuclei
-        # nuclei_out, nuclei_in = self._get_nuclei_positions(
-        #     labeled_image, mask, nuclei_channel, 0.4)
+            mask = self._get_fiber_mask(fiber_channel, nuclei_channel, fiber_threshold)
 
-        # del fiber_channel
+            nuclei_out, nuclei_in = self._get_nuclei_positions(
+                labeled_image, mask, nuclei_channel, 0.4)
 
-        # # Calculating the area of fibers over the total area
-        # area = np.count_nonzero(mask) / mask.shape[0] / mask.shape[1]
+            mask_8_bits = (mask * 255).astype('uint8')
+            fiber_contours, _ = cv2.findContours(mask_8_bits, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+            fiber_contours = tuple(map(np.squeeze, fiber_contours))
 
-        # # Finding the contours of the fibers
-        # mask_8_bits = (mask * 255).astype('uint8')
-        # fiber_contours, _ = cv2.findContours(mask_8_bits, cv2.RETR_LIST,
-        #                                      cv2.CHAIN_APPROX_SIMPLE)
-        # fiber_contours = tuple(map(np.squeeze, fiber_contours))
+            imageid_dict[str(counter)] = {
+                "nuclei": {
+                    "nucleiIn": nuclei_in,
+                    "nucleiOut": nuclei_out
+                },
+                "fibers": {str(fiber_id): {
+                    "fiberPath": contour,
+                    "fiberArea": cv2.contourArea(contour)
+                } for fiber_id, contour in enumerate(fiber_contours)}
+            }
 
-        # return nuclei_out, nuclei_in, fiber_contours, area
-        return labeled_image
+        return imageid_dict
     @staticmethod
     def _get_fiber_mask(fiber_channel: np.ndarray,
                         nuclei_channel: np.ndarray,

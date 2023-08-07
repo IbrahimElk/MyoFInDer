@@ -42,10 +42,15 @@ const processImagesButton = document.getElementById(
 
 processImagesButton.addEventListener("click", async () => {
   const files = FILETABLE.getProcessingFiles();
-  const serialisedFiles = JSON.stringify(files);
-  const arrObj: result = await invoke("send_and_receive", {
+  const serialisedFiles = JSON.stringify(files);//FIXME: expensive operation.
+
+  if(serialisedFiles.startsWith("{}")) {
+    return;
+  }
+  const output: string = await invoke("send_and_receive", {
     input: serialisedFiles,
   });
+  const arrObj:result = JSON.parse(output)
   FILETABLE.drawProcessesFiles(arrObj);
 });
 
