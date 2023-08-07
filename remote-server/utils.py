@@ -38,7 +38,10 @@ def process_payload(payload_str):
 def convert_base64_to_np(base64_data):
     images_np = []
     for base64_str in base64_data:
-        image_bytes = base64.b64decode(base64_str) # inefficient as the data alredy came in bytes...
+        if base64_str.startswith("data:image"):
+            base64_str = base64_str.split(",")[1]
+        
+        image_bytes = base64.b64decode(base64_str) 
         image_np = check_image(image_bytes)
         if image_np is not None:
             images_np.append(image_np)
@@ -60,14 +63,11 @@ def check_image(image_data: bytes) -> Optional[np.ndarray]:
         wasn't successful.
     """
     # Convert the image_data bytes to a numpy array of type np.uint8
-    # image_data_bytes = bytes(image_data)
-    # print(image_data_bytes)
-    # image_array = np.frombuffer(image_data, dtype=np.uint8)
-    # image_array = np.frombuffer(image_data_bytes, dtype=np.uint8)
-    # print(image_array)
+    image_data_bytes = bytes(image_data)
+    image_array = np.frombuffer(image_data, dtype=np.uint8)
+    image_array = np.frombuffer(image_data_bytes, dtype=np.uint8)
     # Decode the image using cv2.imdecode with the flag cv2.IMREAD_COLOR
     cv_img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-    print(cv_img)
     # In case the image cannot be loaded
     if cv_img is None:
         return None

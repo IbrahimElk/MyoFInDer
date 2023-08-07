@@ -134,13 +134,28 @@ export class CanvasInteraction {
     const marker = new Nucleus(x, y, type,this.idImage);
     this.nuclei.append(marker);
     this.drawImageWithMarkers();
-    this.fireEvent();
   }
-  
+
   public addFiber(fiberPoints :[number,number][], area: number) {
     const ratioFiber = area / (this.image.width* this.image.height) ;
     const pointer = new Fiber(fiberPoints, this.idImage, area, ratioFiber);
     this.fibers.append(pointer);
+  }
+
+  addAllMarkers(nuclei: { nucleiIn: [number, number][]; nucleiOut: [number, number][]; }) {
+    for(const marker of nuclei.nucleiIn){
+      this.addMarker(marker[0],marker[1],0);
+    }
+    for(const marker of nuclei.nucleiOut){
+      this.addMarker(marker[0],marker[1],1);
+    }
+    this.fireEvent();
+  }
+  addAllFibers(fibers: { [fiberID: string]: { fiberPath: [number, number][]; fiberArea: number; }; }) {
+    for (const fiberID in fibers){
+      const fiberObj = fibers[fiberID];
+      this.addFiber(fiberObj.fiberPath,fiberObj.fiberArea);
+    }
     this.fireEvent();
   }
 
@@ -150,9 +165,8 @@ export class CanvasInteraction {
         total: this.nuclei.getTotalNucleiCount(),
         ratio:this.nuclei.getRatio(),
         fiberRatio: this.fibers.getRatio()
-      
     }
-    const markerAddedEvent = new CustomEvent("markerAdded", event );
+    const markerAddedEvent = new CustomEvent("markerAdded", {"detail" : event} );
     this.canvas.dispatchEvent(markerAddedEvent);
   }
 
@@ -186,6 +200,7 @@ export class CanvasInteraction {
   }
 
   public mouseUpHandler(e: MouseEvent) {
+    console.log(e);
     this.transform.isDragging = false;
   }
   // Handle mousewheel event to zoom in/out around the cursor position

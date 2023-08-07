@@ -294,17 +294,8 @@ export class FileTable {
       if(!layer){
         continue ;
       }
-      for (const marker of result[layerId].nuclei.nucleiIn){
-        layer.canvasElement.canvasTransform.addMarker(marker[0],marker[1],0);
-      }
-
-      for (const marker of result[layerId].nuclei.nucleiOut){
-        layer.canvasElement.canvasTransform.addMarker(marker[0],marker[1],1);
-      }
-      for (const fiberID in result[layerId].fibers){
-        const fiberObj = result[layerId].fibers[fiberID]
-        layer.canvasElement.canvasTransform.addFiber(fiberObj.fiberPath,fiberObj.fiberArea);
-      }
+      layer.canvasElement.canvasTransform.addAllMarkers(result[layerId].nuclei);
+      layer.canvasElement.canvasTransform.addAllFibers(result[layerId].fibers);
     }
   }
 

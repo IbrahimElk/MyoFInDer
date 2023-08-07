@@ -29,7 +29,12 @@ class Image_segmentation:
                  fiber_threshold: int,
                  nuclei_threshold: int,
                  small_objects_threshold: int) -> data_structure:
-        self._remove_scale_bar(images)
+
+        # Removing the scale bar
+        for image in images : 
+            image[(image[:, :, 0] > 50) &
+                (image[:, :, 1] > 50) &
+                (image[:, :, 2] > 50)] = (0, 0, 0)
 
         nuclei_channels = images[:, :, :, color_to_int[nuclei_color]]
         fiber_channels = images[:, :, :, color_to_int[fiber_color]]
@@ -71,16 +76,21 @@ class Image_segmentation:
             fiber_contours, _ = cv2.findContours(mask_8_bits, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
             fiber_contours = tuple(map(np.squeeze, fiber_contours))
 
-            imageid_dict[str(counter)] = {
-                "nuclei": {
-                    "nucleiIn": nuclei_in,
-                    "nucleiOut": nuclei_out
-                },
-                "fibers": {str(fiber_id): {
-                    "fiberPath": contour,
-                    "fiberArea": cv2.contourArea(contour)
-                } for fiber_id, contour in enumerate(fiber_contours)}
-            }
+            counter = 0
+            for contour in fiber_contours:
+                contour_list = contour.tolist()  # Convert the NumPy array to a list of lists
+                imageid_dict[str(counter)] = {
+                    "nuclei": {
+                        "nucleiIn": nuclei_in,
+                        "nucleiOut": nuclei_out
+                    },
+                    "fibers": {str(counter): {
+                        "fiberPath": contour_list,
+                        "fiberArea": cv2.contourArea(contour)
+                    }}
+                }
+                counter += 1
+
 
         return imageid_dict
     @staticmethod

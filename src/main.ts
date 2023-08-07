@@ -4,7 +4,6 @@ import { FileTable, result, data } from "./fileTable";
 
 const FILETABLE = new FileTable();
 window.addEventListener("contextmenu", (e) => e.preventDefault());
-
 // --------------------------------------------------------------------------------------
 // LOADING IMAGES
 // --------------------------------------------------------------------------------------
@@ -50,7 +49,7 @@ processImagesButton.addEventListener("click", async () => {
   const output: string = await invoke("send_and_receive", {
     input: serialisedFiles,
   });
-  const arrObj:result = JSON.parse(output)
+  const arrObj:result = JSON.parse(output);
   FILETABLE.drawProcessesFiles(arrObj);
 });
 

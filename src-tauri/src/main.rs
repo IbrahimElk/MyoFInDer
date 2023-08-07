@@ -11,15 +11,6 @@ use std::path::Path;
 use std::collections::HashMap;
 
 
-// -----------------------------------------------------------
-// -----------------------------------------------------------
-// FIXME: OUTDATED. 
-#[derive(Debug,Serialize, Deserialize)]
-struct NucleiData {
-    nucleiIn: Vec<(i32,i32)>,
-    nucleiOut: Vec<(i32,i32)>,
-    fiber: Vec<(i32,i32)>,
-}
 
 // -----------------------------------------------------------
 // -----------------------------------------------------------
@@ -116,16 +107,25 @@ async fn send(json_data:String, mut resolved_stream:TcpStream,buffer: &mut Vec<u
 
 async fn read(stream: &mut TcpStream, buffer: &mut Vec<u8>) -> Vec<u8> {
     loop {
-        let mut chunk = vec![0; 1024];
+        let mut chunk = vec![0; 4096];
         let res = stream.read(&mut chunk).await;
         println!("res: {:?}", res);
         match res {
             Ok(bytes_read) => {
                 println!("Ok read");
                 if bytes_read == 0 {
+                    println!("what");
                     break;
                 }
+
                 buffer.extend_from_slice(&chunk[..bytes_read]);
+
+                if let Some(eof_index) = buffer.windows("EOF".as_bytes().len()).position(|window| window == "EOF".as_bytes()) {
+                    println!("efefe");
+                    buffer.truncate(eof_index);
+                    break;
+                }            
+
             }
             Err(err) => {
                 println!("Error while reading from server: {:?}", err);
@@ -136,6 +136,8 @@ async fn read(stream: &mut TcpStream, buffer: &mut Vec<u8>) -> Vec<u8> {
     println!("nice");
     return buffer.to_vec();
 }
+
+
 
 // ----------------------------------------------------------------------------------------------------
 // STORE COMMAND
