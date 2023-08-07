@@ -6,8 +6,22 @@ from typing import Optional
 import numpy as np
 import base64
 import json
+from typing import List
 
 class Payload:
+    """
+    Represents a payload containing a dictionary of ID-image pairs.
+
+    Attributes:
+        dict (dict): A dictionary to store ID-image pairs, where ID is a string and image is a Base64-encoded string.
+
+    Example Usage:
+        ```
+        payload = Payload()
+        payload.append("image001", "iVBORw0KGg... (Base64-encoded image data)")
+        payload.append("image002", "data:image/png;base64,iVBORw0KG... (Base64-encoded image data)")
+        ```
+    """
     def __init__(self):
         self.dict:dict = {}
 
@@ -16,6 +30,27 @@ class Payload:
 
 
 def process_payload(payload_str):
+    """
+    Processes a JSON payload string and returns a Payload object containing the ID-image pairs.
+
+    Parameters:
+        payload_str (str): The JSON string representing the payload.
+
+    Returns:
+        Payload or None: A Payload object if the payload_str is successfully processed, or None if there is an error.
+
+    Example Usage:
+        ```python
+        payload_str = '{"image001": "iVBORw0KGg...", "image002": "data:image/png;base64,iVBORw0KG..."}'
+        payload = process_payload(payload_str)
+        if payload is not None:
+            # Use the payload object to access the ID-image pairs
+            for id_image, base64_image in payload.dict.items():
+                print(f"ID: {id_image}, Base64 Image: {base64_image}")
+        else:
+            print("Error processing payload.")
+        ```
+    """
     try:
         # Assuming payload_str is a JSON string, you can parse it into a dictionary
         payload_dict:dict = json.loads(payload_str)
@@ -35,7 +70,33 @@ def process_payload(payload_str):
         return None
 
 
-def convert_base64_to_np(base64_data):
+def convert_base64_to_np(base64_data:List[str]):
+    """
+    Converts a list of Base64-encoded image data to a list of NumPy arrays representing valid images.
+
+    Parameters:
+        base64_data: A list of strings, where each string represents Base64-encoded image data.
+
+    Returns:
+        list: A list of NumPy arrays, each representing a valid image that has been successfully decoded from Base64.
+        Where each image is a multidimensional numpy array (width,height,3)
+
+    Example Usage:
+        ```python
+        
+        base64_data = [
+            "data:image/png;base64,iVBORw0KG...",
+            "data:image/jpeg;base64,/9j/4AAQSkZ...",
+            "iVBORw0KGg... (Base64-encoded image without the 'data:image' prefix)",
+            "invalid_base64_string"  # Invalid Base64 string, won't be processed.
+        ]
+
+        # Calling the function to convert Base64 data to NumPy arrays
+        images_np = convert_base64_to_np(base64_data)
+
+        # `images_np` will now contain a list of valid NumPy arrays representing images.
+        ```
+    """
     images_np = []
     for base64_str in base64_data:
         if base64_str.startswith("data:image"):

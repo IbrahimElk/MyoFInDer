@@ -1,5 +1,5 @@
 src-tauri/Cargo.lock
-*.lock
+
 # Logs
 logs
 *.log

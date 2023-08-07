@@ -63,14 +63,11 @@ export class Nucleus {
         Xpos: this.getXpos(),
         Ypos: this.getYpos(),
         type: this.getType(),
-        // idImage : this.getImageId()
-        // radius: this.getRadius(),
-        // color: this.getColor(),
     }
   }
 }
 /**
- * Class associated with multiple Nucleus instanes.
+ * Class associated with multiple Nucleus instances.
  */
 export class Nuclei {
   private nuclei: Nucleus[];
