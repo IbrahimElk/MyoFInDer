@@ -213,6 +213,7 @@ export class CanvasInteraction {
     const ratioFiber = area / (this.image.width* this.image.height) ;
     const pointer = new Fiber(fiberPoints, this.idImage, area, ratioFiber);
     this.fibers.append(pointer);
+    this.drawImageWithMarkers();
     this.fireEvent();
   }
   /**
@@ -225,11 +226,12 @@ export class CanvasInteraction {
    */
   public addAllMarkers(nuclei: { nucleiIn: [number, number][]; nucleiOut: [number, number][]; }) {
     for(const marker of nuclei.nucleiIn){
-      this.addMarker(marker[0],marker[1],0);
+      this.nuclei.append(new Nucleus(marker[0], marker[1], 0,this.idImage));
     }
     for(const marker of nuclei.nucleiOut){
-      this.addMarker(marker[0],marker[1],1);
+      this.nuclei.append(new Nucleus(marker[0], marker[1], 1,this.idImage));
     }
+    this.drawImageWithMarkers();
     this.fireEvent();
   }
   /**
@@ -243,8 +245,11 @@ export class CanvasInteraction {
   public addAllFibers(fibers: { [fiberID: string]: { fiberPath: [number, number][]; fiberArea: number; }; }) {
     for (const fiberID in fibers){
       const fiberObj = fibers[fiberID];
-      this.addFiber(fiberObj.fiberPath,fiberObj.fiberArea);
+      const ratioFiber = fiberObj.fiberArea / (this.image.width* this.image.height) ;
+      const pointer = new Fiber(fiberObj.fiberPath, this.idImage, fiberObj.fiberArea, ratioFiber);
+      this.fibers.append(pointer);
     }
+    this.drawImageWithMarkers();
     this.fireEvent();
   }
   /**

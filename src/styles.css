@@ -24,7 +24,7 @@ canvas {
   left: 0; /* Align the canvas elements to the left */
   width: 100%; /* Set the width to 100% of the container */
   height: 100%; /* Set the height to 100% of the container */
-  border: 5px solid #ccc; /* Optional: Add a border to visually separate the canvas elements */
+  /* border: 5px solid #ccc; Optional: Add a border to visually separate the canvas elements */
 }
 #sidebar {
   flex: 1;

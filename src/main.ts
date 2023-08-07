@@ -72,6 +72,9 @@ saveAsButton.addEventListener("click", async () => {
   const data:data = FILETABLE.getSavingData();
   data.title = lastFolder;
 
+  console.log(data);
+  console.log(project_path);
+
   await invoke("save", {
     projectPath: project_path, // Corrected argument name here
     csvData: FILETABLE.getCSV(),

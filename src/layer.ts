@@ -35,6 +35,7 @@ export class Layer {
   this.canvasElement.getHtmlCanvas().addEventListener("markerAdded", (event:Event) => {
     const customEvent = event as CustomEvent<MyCustomEvent>;
     const data = customEvent.detail;
+    console.log(data);
     this.cardElement.changeHtmlCard(data.ratio, data.fiberRatio, data.positive, data.total);
   });
   }
@@ -199,15 +200,15 @@ class CardEntry {
     const cardDiv = document.createElement("div");
     const cardTitleDiv = document.createElement("div");
     const cardInfoDiv = document.createElement("div");
-    const totalItemDiv = this.createCardInfoItem("Total", `${this.total}`);
+    const totalItemDiv = this.createCardInfoItem("Total", `${this.total}`, "total");
     const positiveItemDiv = this.createCardInfoItem(
       "Positive",
-      `${this.positive}`
+      `${this.positive}`, "positive"
     );
-    const ratioItemDiv = this.createCardInfoItem("Ratio", `${this.ratio}`);
+    const ratioItemDiv = this.createCardInfoItem("Ratio", `${this.ratio}`, "ratio");
     const fiberAreaItemDiv = this.createCardInfoItem(
       "Fiber Area",
-      `${this.fibreArea}`
+      `${this.fibreArea}`, "area"
     );
     const checkboxInput = document.createElement("input");
     const deleteButtonDiv = document.createElement("button");
@@ -246,12 +247,11 @@ class CardEntry {
    * @param {string} value - The value for the card info item.
    * @returns {HTMLElement} - The newly created card info item element.
    */
-  private createCardInfoItem(label: string, value: string): HTMLElement {
+  private createCardInfoItem(label: string, value: string, id:string): HTMLElement {
     const itemDiv = document.createElement("div");
     const labelElement = document.createElement("label");
     const valueElement = document.createElement("span");
-    console.log(label);
-    valueElement.id = label;
+    itemDiv.id = id;
     labelElement.textContent = label;
     valueElement.textContent = value;
 
@@ -363,15 +363,15 @@ class CardEntry {
       "card-container"
     ) as HTMLDivElement;
     const card = cardContainer.querySelector(`#card\\:${this.id}`);
+    console.log(card);
     if (!card) {
       return;
     }
 
-    const totalValue = card.querySelector("#total-value");
-    const positiveValue = card.querySelector("#positive-value");
-    const ratioValue = card.querySelector("#ratio-value");
-    const fiberAreaValue = card.querySelector("#fiber-area-value");
-
+    const totalValue = card.querySelector("#total")?.querySelector("span");
+    const positiveValue = card.querySelector("#positive")?.querySelector("span");
+    const ratioValue = card.querySelector("#ratio")?.querySelector("span");
+    const fiberAreaValue = card.querySelector("#area")?.querySelector("span");
     if (totalValue && positiveValue && ratioValue && fiberAreaValue) {
       totalValue.textContent = total.toString();
       positiveValue.textContent = positive.toString();
@@ -392,3 +392,4 @@ class CardEntry {
     };
   }
 }
+

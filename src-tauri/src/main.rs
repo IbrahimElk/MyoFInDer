@@ -11,25 +11,25 @@ use std::collections::HashMap;
 
 #[derive(Debug,Serialize,Deserialize)]
 struct NucleusJSON {
-    x_pos: i32,
-    y_pos: i32,
-    id: i32,
-    r#type: i32,
+    Xpos: f64,
+    Ypos: f64,
+    id: f64,
+    r#type: f64,
 }
 
 #[derive(Debug,Serialize,Deserialize)]
 struct FiberJSON {
-    area: i32,
-    fiber_path: Vec<(i32, i32)>,
-    id: i32,
+    area: f64,
+    fiberPath: Vec<(f64, f64)>,
+    id: f64,
 }
 
 #[derive(Debug,Serialize,Deserialize)]
 struct ImageData {
-    name_image: String,
-    data_url_base64: String,
-    fibe_data: Vec<FiberJSON>,
-    nuclei_data: Vec<NucleusJSON>,
+    nameImage: String,
+    dataUrlBase64: String,
+    FiberData: Vec<FiberJSON>,
+    NucleiData: Vec<NucleusJSON>,
 }
 
 #[derive(Debug, Serialize,Deserialize)]
@@ -161,8 +161,8 @@ fn extract_and_save_images(folder_path: &str, save_data: &Data) {
 
     // Loop through the data object and extract image data
     for (image_id, image_data) in &save_data.data {
-        let name_image = &image_data.name_image;
-        let data_url_base64 = &image_data.data_url_base64;
+        let name_image = &image_data.nameImage;
+        let data_url_base64 = &image_data.dataUrlBase64;
 
         // Convert base64 string to binary
         let base64_data = data_url_base64.replace("data:image/png;base64,", "");
