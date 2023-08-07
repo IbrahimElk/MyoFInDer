@@ -36,7 +36,9 @@ Installation
 
 Download the executable from the repository or the official release. You can install the application on your local machine.
 
-2. Remote Server Setup: Deploy the Python code, which contains the computational prediction model, on the remote server. The server should expose an API endpoint to accept image data for processing and return the computed fusion index results in JSON format.
+2. Remote Server Setup:
+
+Deploy the Python code, which contains the computational prediction model, on the remote server. The server should expose an API endpoint to accept image data for processing and return the computed fusion index results in JSON format.
 
 User Interaction Flow
 ---------------------
