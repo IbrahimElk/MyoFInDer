@@ -40,6 +40,10 @@ Download the executable from the repository or the official release. You can ins
 
 Deploy the Python code, which contains the computational prediction model, on the remote server. The server should expose an API endpoint to accept image data for processing and return the computed fusion index results in JSON format.
 
+To run the python server locally, exceute the following command. 
+```python
+python3 server.py
+```
 User Interaction Flow
 ---------------------
 
