@@ -18,8 +18,9 @@ class Image_segmentation:
     """Class for processing images, detecting fibers and nuclei."""
 
     def __init__(self) -> None:
-        """Simply loads the Mesmer library."""
-
+        """
+        Initializes the Image_segmentation object by loading the Mesmer library.
+        """
         self._app = Mesmer()
 
     def predict(self,
@@ -29,7 +30,27 @@ class Image_segmentation:
                  fiber_threshold: int,
                  nuclei_threshold: int,
                  small_objects_threshold: int) -> data_structure:
+        """
+        Performs image segmentation to detect fibers and nuclei in the input images.
 
+        Parameters:
+            images (np.ndarray): An array of input images. The shape of the array should be (num_images, height, width, channels).
+            nuclei_color (str): The color channel used for nuclei detection. Possible values are "red", "green", or "blue".
+            fiber_color (str): The color channel used for fiber detection. Possible values are "red", "green", or "blue".
+            fiber_threshold (int): The threshold value used to detect fibers.
+            nuclei_threshold (int): The threshold value used to detect nuclei.
+            small_objects_threshold (int): The threshold value used for removing small objects during post-processing.
+
+        Returns:
+            data_structure: A dictionary containing the segmentation results for each input image.
+
+        Example Usage:
+            ```python
+            # Assuming you have the input images as a NumPy array `input_images`
+            image_segmentation = Image_segmentation()
+            result = image_segmentation.predict(input_images, "green", "blue", 100, 150, 10)
+            ```
+        """
         # Removing the scale bar
         for image in images : 
             image[(image[:, :, 0] > 50) &

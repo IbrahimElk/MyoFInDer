@@ -1,8 +1,8 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import { open, save,message } from "@tauri-apps/api/dialog";
-import { FileTable, result, data } from "./fileTable";
+import { LayerManager, result, data } from "./layer-manager";
 
-const FILETABLE = new FileTable();
+const FILETABLE = new LayerManager();
 window.addEventListener("contextmenu", (e) => e.preventDefault());
 // --------------------------------------------------------------------------------------
 // LOADING IMAGES
@@ -72,6 +72,9 @@ saveAsButton.addEventListener("click", async () => {
   const data:data = FILETABLE.getSavingData();
   data.title = lastFolder;
 
+  console.log(data);
+  console.log(project_path);
+
   await invoke("save", {
     projectPath: project_path, // Corrected argument name here
     csvData: FILETABLE.getCSV(),
@@ -111,6 +114,6 @@ loadProjectButton.addEventListener("click", async () => {
   const jsonData = decoder.decode(projectBuffer);
   const DATA = JSON.parse(jsonData);
 
-  const FILETABLE = new FileTable();
+  const FILETABLE = new LayerManager();
   FILETABLE.loadProject(DATA.data);
 });

@@ -1,5 +1,6 @@
-import { ImageLayer } from "./imageLayer";
+import { Layer } from "./layer";
 import { NucleusJSON, FiberJSON } from "./markers";
+
 export type result = {
   [layerid:string] : {
     nuclei: {
@@ -30,15 +31,17 @@ type data_data =  {
   };
 };
 
-export class FileTable {
-  // private layers: Set<ImageLayer>;
-  private mappedLayers: Map<string, ImageLayer>;
-  private activeLayer: ImageLayer | undefined;
-  private checkboxedlayers: Set<ImageLayer>;
+/**
+ * LayerManager class is responsible for managing interactions with multiple layers and their associated canvases.
+ * @class LayerManager
+ */
+export class LayerManager {
+  private mappedLayers: Map<string, Layer>;
+  private activeLayer: Layer | undefined;
+  private checkboxedlayers: Set<Layer>;
   constructor() {
-    // this.layers = new Set<ImageLayer>();
-    this.mappedLayers = new Map<string,ImageLayer>();
-    this.checkboxedlayers = new Set<ImageLayer>();
+    this.mappedLayers = new Map<string,Layer>();
+    this.checkboxedlayers = new Set<Layer>();
     this.activeLayer = undefined;
 
     this.selectAllCardsEventListener();
@@ -47,14 +50,20 @@ export class FileTable {
     this.channelEventListeners();
     this.indicatorsEventListeners();
   }
-
+  /**
+   * Private method to add a click event listener to the "Select All" checkbox for cards.
+   * @private
+   * @function selectAllCardsEventListener
+   * @memberof LayerManager
+   * @returns {void}
+   */
   private selectAllCardsEventListener() {
     const selectAllcheckBox = document.getElementById(
       "selectAllCheckbox"
     ) as HTMLInputElement;
 
     selectAllcheckBox.addEventListener("click", () => {
-      this.mappedLayers.forEach((value: ImageLayer) => {
+      this.mappedLayers.forEach((value: Layer) => {
         const checkbox = value.cardElement
           .getHtmlCard()
           .querySelector(".card-checkbox") as HTMLInputElement;
@@ -68,14 +77,20 @@ export class FileTable {
       });
     });
   }
-
+  /**
+   * Private method to add a click event listener to the "Delete All" button for cards.
+   * @private
+   * @function deleteCheckedCardsEventListener
+   * @memberof LayerManager
+   * @returns {void}
+   */
   private deleteCheckedCardsEventListener() {
     const deleteButton = document.getElementById(
       "removeAllButton"
     ) as HTMLButtonElement;
 
     deleteButton.addEventListener("click", () => {
-      this.checkboxedlayers.forEach((entry: ImageLayer) => {
+      this.checkboxedlayers.forEach((entry: Layer) => {
         entry.canvasElement.deleteHTMLCanvas();
         entry.cardElement.deleteHtmlCard();
         this.mappedLayers.delete(entry.getId());
@@ -83,8 +98,13 @@ export class FileTable {
       this.checkboxedlayers.clear();
     });
   }
-
-  //TODO: make it possible to drag image whilst crossing canvas to sidebar.
+  /**
+   * Private method to initialize event listeners for canvas interactions.
+   * @private
+   * @function initializeWrapperEventListeners
+   * @memberof LayerManager
+   * @returns {void}
+   */
   private initializeWrapperEventListeners() {
     const wrapper = document.getElementById(
       "canvas_container"
@@ -128,7 +148,13 @@ export class FileTable {
       this.activeLayer.canvasElement.canvasTransform.mouseDownHandler(e);
     }
   };
-
+  /**
+   * Private method to add event listeners for channel checkboxes.
+   * @private
+   * @function channelEventListeners
+   * @memberof LayerManager
+   * @returns {void}
+   */
   private channelEventListeners() {
     const blueCheckbox = document.getElementById(
       "blueCheckbox"
@@ -184,7 +210,13 @@ export class FileTable {
       this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
     }
   };
-
+  /**
+   * Private method to add event listeners for indicators checkboxes (nuclei and fibers).
+   * @private
+   * @function indicatorsEventListeners
+   * @memberof LayerManager
+   * @returns {void}
+   */
   private indicatorsEventListeners() {
     const nucleiCheckbox = document.getElementById(
       "nucleiCheckbox"
@@ -214,12 +246,21 @@ export class FileTable {
     });
   }
 
-  public async addCard(name: string, location: string):  Promise<ImageLayer>{
+  /**
+   * Public method to add a new layer card to the LayerManager.
+   * @public
+   * @function addCard
+   * @memberof LayerManager
+   * @param {string} name - The name or identifier associated with the layer.
+   * @param {string} location - The location of the image for the layer.
+   * @returns {Promise<Layer>} - A promise that resolves with the newly added Layer object.
+   */
+  public async addCard(name: string, location: string):  Promise<Layer>{
     return new Promise((resolve, reject) =>{
     const img = new Image();
     img.src = location;
     img.addEventListener("load", () => {
-      const newLayer = new ImageLayer(img, name);
+      const newLayer = new Layer(img, name);
       if (this.mappedLayers.size === 0) {
         this.activeLayer = newLayer;
         this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
@@ -236,7 +277,7 @@ export class FileTable {
     });
   }
 
-  private initialiseDeleteCardEventListener(entry: ImageLayer) {
+  private initialiseDeleteCardEventListener(entry: Layer) {
     const deleteButton = entry.cardElement
       .getHtmlCard()
       .querySelector(".delete-button") as HTMLDivElement;
@@ -256,7 +297,7 @@ export class FileTable {
     });
   }
 
-  private initialiseCheckingBoxEventListener(entry: ImageLayer) {
+  private initialiseCheckingBoxEventListener(entry: Layer) {
     const checkbox = entry.cardElement
       .getHtmlCard()
       .querySelector(".card-checkbox") as HTMLInputElement;
@@ -271,7 +312,7 @@ export class FileTable {
     });
   }
 
-  private initialiseSelectCardEventListener(entry: ImageLayer) {
+  private initialiseSelectCardEventListener(entry: Layer) {
     const card = entry.cardElement.getHtmlCard();
 
     card.addEventListener("click", () => {
@@ -287,7 +328,14 @@ export class FileTable {
       this.activeLayer.canvasElement.canvasTransform.drawImageWithMarkers();
     });
   }
-
+  /**
+   * Public method to draw markers and fibers for each layer based on the provided result data.
+   * @public
+   * @function drawProcessesFiles
+   * @memberof LayerManager
+   * @param {result} result - The result data containing nuclei and fibers information for each layer.
+   * @returns {void}
+   */
   public drawProcessesFiles(result: result) {
     for (const layerId in result) {
       const layer = this.mappedLayers.get(layerId);
@@ -298,7 +346,13 @@ export class FileTable {
       layer.canvasElement.canvasTransform.addAllFibers(result[layerId].fibers);
     }
   }
-
+  /**
+   * Public method to get the data of processing files (selected layers).
+   * @public
+   * @function getProcessingFiles
+   * @memberof LayerManager
+   * @returns {data_data} - The data of processing files (selected layers).
+   */
   public getProcessingFiles() {
     const allLayersImages: {
       [key: string]: string;
@@ -310,7 +364,13 @@ export class FileTable {
     });
     return allLayersImages;
   }
-
+  /**
+   * Public method to get the data in the LayerManager in the format suitable for saving.
+   * @public
+   * @function getSavingData
+   * @memberof LayerManager
+   * @returns {data} - The data in the LayerManager in the format suitable for saving.
+   */
   public getSavingData():data {
     const SAVE_DATA:data = {
       title: "",
@@ -328,7 +388,13 @@ export class FileTable {
     });
     return SAVE_DATA;
   }
-
+  /**
+   * Public method to get the data in CSV format.
+   * @public
+   * @function getCSV
+   * @memberof LayerManager
+   * @returns {string} - The data in CSV format.
+   */
   public getCSV(){
     var data = [
       ['Image names', 'Total number of nuclei', 'Number of tropomyosin positive nuclei','Fusion index','Fiber area ratio'],
@@ -350,20 +416,28 @@ export class FileTable {
     });
     return csvContent;
   }
+  /**
+   * Public method to load a project with the provided data.
+   * @public
+   * @function loadProject
+   * @memberof LayerManager
+   * @param {data_data} data - The data to load the project.
+   * @returns {Promise<void>} - A promise that resolves when the project is loaded.
+   */
   public async loadProject(data:data_data) {
     for (const imageID in data){
       const imageData = data[imageID]
-      const newlayer: ImageLayer = await this.addCard(imageData.nameImage,imageData.dataUrlBase64);
+      const newlayer: Layer = await this.addCard(imageData.nameImage,imageData.dataUrlBase64);
       this.loadingMarkers(newlayer,imageData.NucleiData);
       this.loadingFibers(newlayer, imageData.FiberData);
     }
   }
-  private loadingMarkers(layer:ImageLayer,nucs : NucleusJSON[]){
+  private loadingMarkers(layer:Layer,nucs : NucleusJSON[]){
     for (const marker of nucs){
       layer.canvasElement.canvasTransform.addMarker(marker.Xpos,marker.Ypos,marker.type);
     }
   }
-  private loadingFibers(layer : ImageLayer, fibs : FiberJSON[]){
+  private loadingFibers(layer : Layer, fibs : FiberJSON[]){
     for (const pointer of fibs){
       layer.canvasElement.canvasTransform.addFiber(pointer.fiberPath,pointer.area);
     }

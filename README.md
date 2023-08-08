@@ -1,71 +1,65 @@
 The Myoblast Fusion Index Determination Software
 ================================================
 
-The MyoFInDer Python package aims to provide an open-source graphical interface 
+The Myofinder application aims to provide an open-source graphical interface 
 for automatic calculation of the fusion index in muscle cell cultures, based on 
 fluorescence microscopy images.
 
 Presentation
 ------------
 
-MyoFInDer is based on an Artificial Intelligence library for cell segmentation, 
-that it makes easily accessible to researchers with limited computer skills. In 
-the interface, users can manage multiple images at once, adjust processing 
-parameters, and manually correct the output of the computation. It is also 
+Myofinder is based on an Artificial Intelligence library for cell segmentation, 
+that it makes easily accessible to researchers with limited computer skills.
+In the interface, users can manage multiple images at once, 
+<!-- adjust processing parameters,  -->
+and manually correct the output of the computation. It is also 
 possible to save the result of the processing as a project, that can be shared 
 and re-opened later.
 
-A more detailed description of the features and usage of MyoFInDer can be found 
+A more detailed description of the features and usage of Myofinder can be found 
 in the 
-[usage section](https://tissueengineeringlab.github.io/MyoFInDer/usage.html)
+[usage section](https://tissueengineeringlab.github.io/Myofinder/usage.html)
 of the documentation.
 
-MyoFInDer was developed at the 
-[Tissue Engineering Lab](https://tissueengineering.kuleuven-kulak.be/) in 
-Kortrijk, Belgium, which is part of the 
-[KU Leuven](https://www.kuleuven.be/kuleuven/) university. It is today the
-preferred solution in our laboratory for assessing the fusion index of a cell 
-population.
+Myofinder was developed by students of [KU Leuven](https://www.kuleuven.be/kuleuven/) university, which is then further refined by [Tissue Engineering Lab](https://tissueengineering.kuleuven-kulak.be/) in Kortrijk, Belgium, which is part of the [KU Leuven](https://www.kuleuven.be/kuleuven/) university. After this, I forked the project to update it even further. 
 
 Requirements
 ------------
 
-To install and run MyoFInDer, you'll need Python 3 (3.7 to 3.10), approximately 
-1GB of disk space, and preferably 8GB of memory or more. MyoFInDer runs on 
-Windows, Linux, macOS, and potentially other OS able to run a compatible 
-version of Python.
-
-The dependencies of the module are :
-
-- [Pillow](https://python-pillow.org/)
-- [opencv-python](https://pypi.org/project/opencv-python/)
-- [DeepCell](https://pypi.org/project/DeepCell/)
-- [XlsxWriter](https://pypi.org/project/XlsxWriter/)
-- [screeninfo](https://pypi.org/project/screeninfo/)
-- [numpy](https://numpy.org/)
+To run Myofinder, you only need to install the correct excutable for your OS (linux, windows, macOS). 
+See the release branch. 
 
 Installation
 ------------
 
-MyoFInDer is distributed on PyPI, and can thus be installed using the `pip` 
-module of Python :
+1. Install the Tauri UI Application: 
 
-```console
-python -m pip install myofinder
+Download the executable from the repository or the official release. You can install the application on your local machine.
+
+2. Remote Server Setup:
+
+Deploy the Python code, which contains the computational prediction model, on the remote server. The server should expose an API endpoint to accept image data for processing and return the computed fusion index results in JSON format.
+
+To run the python server locally, exceute the following command. 
+```python
+python3 server.py
 ```
+User Interaction Flow
+---------------------
 
-Note that in the `bin` folder of this repository, a very basic `.msi` Windows
-installer allows automatically installing the module and its dependencies for
-Windows users who don't feel comfortable with command-line operations.
+1. Launch the Tauri UI Application: Run the Tauri UI application on your local machine. The application will provide a user-friendly interface for image processing.
 
-A more detailed description of the installation procedure can be found in the 
-[installation section](https://tissueengineeringlab.github.io/MyoFInDer/installation.html)
-of the documentation.
+2. Upload Images: Use the Tauri UI interface to upload images for processing. The Tauri application will prepare the image data to be sent to the remote server.
 
-Documentation
--------------
+3. Send Requests to Remote Server: When the "Process Images" button is clicked, the Tauri UI application makes requests to the remote server, passing the uploaded image data.
 
-The latest version of the documentation can be accessed on the 
-[project's website](https://tissueengineeringlab.github.io/MyoFInDer/). It 
-contains detailed information about the installation, usage, and 
-troubleshooting. 
+4. Process Images on Remote Server: The remote server receives the image data, processes it using the computational prediction model, and computes the fusion index.
+
+5. Display Results: The results of the image processing are returned from the remote server to the Tauri UI application. The application displays the fusion index results to the user.
+
+Security and Confidentiality
+----------------------------
+
+To ensure security and confidentiality of sensitive data, the remote server code can be run on site, on the servers of the your institution.  
+
+I hope that the Myofinder software, with the separated UI and the remote server architecture, will provide an efficient and confidential solution for assessing the fusion index of cell populations using fluorescence microscopy images.
