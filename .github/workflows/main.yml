@@ -62,17 +62,17 @@ jobs:
       - name: Build executable
         run: pyinstaller --onefile remote-server/server.py
 
-      - name: Upload executable as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: server-executable
-          path: dist/server
+      # - name: Upload executable as artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: server-executable
+      #     path: dist/server
 
-      - name: Download server executable
-        uses: actions/download-artifact@v2
-        with:
-          name: server-executable
-          path: dist/server
+      # - name: Download server executable
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: server-executable
+      #     path: dist/server
 
       - name: Make executable (Unix-based platforms)
         if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
@@ -81,5 +81,5 @@ jobs:
       - name: Make executable (Windows)
         if: matrix.platform == 'windows-latest'
         run: |
-          Rename-Item -Path dist/server/server.exe -NewName server.exe
+          Rename-Item -Path dist/server/server -NewName server.exe
 
