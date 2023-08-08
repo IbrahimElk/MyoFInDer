@@ -41,6 +41,8 @@ jobs:
 
 
   build-python-executable:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
