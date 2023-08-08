@@ -62,7 +62,7 @@ jobs:
         run: pip install -r requirements.txt 
 
       - name: Build executable
-        run: pyinstaller remote-server/server.py
+        run: pyinstaller --onefile remote-server/server.py
 
       # - name: Upload executable as artifact
       #   uses: actions/upload-artifact@v2
@@ -94,3 +94,14 @@ jobs:
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload executables
+        id: upload_executables
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/  # Path to the directory containing your compiled executables
+          asset_name: server-${{ matrix.platform }}  # Customize the asset name
+          asset_content_type: application/octet-stream
