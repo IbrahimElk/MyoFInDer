@@ -76,10 +76,10 @@ jobs:
 
       - name: Make executable (Unix-based platforms)
         if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
-        run: chmod +x dist/server/server
+        run: chmod +x dist/server
 
-      - name: Make executable (Windows)
-        if: matrix.platform == 'windows-latest'
-        run: |
-          Rename-Item -Path dist/server/server -NewName server.exe
+      # - name: Make executable (Windows)
+      #   if: matrix.platform == 'windows-latest'
+      #   run: |
+      #     Rename-Item -Path dist/server/server -NewName server.exe
 
