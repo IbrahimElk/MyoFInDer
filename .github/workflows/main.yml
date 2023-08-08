@@ -83,3 +83,12 @@ jobs:
       #   run: |
       #     Rename-Item -Path dist/server/server -NewName server.exe
 
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/server  # Add the path to your executable
+          tag_name: exec-v${{ github.run_number }}  # You can customize the tag name
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
