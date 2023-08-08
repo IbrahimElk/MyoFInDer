@@ -38,3 +38,48 @@ jobs:
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
+
+
+  build-python-executable:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+    
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8 
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt 
+
+      - name: Build executable
+        run: pyinstaller --onefile remote-server/server.py
+
+      - name: Upload executable as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: server-executable
+          path: remote-server/dist/server
+
+      - name: Download server executable
+        uses: actions/download-artifact@v2
+        with:
+          name: server-executable
+          path: downloaded-executable
+
+      - name: Make executable (Unix-based platforms)
+        if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
+        run: chmod +x downloaded-executable/server
+
+      - name: Make executable (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          Rename-Item -Path downloaded-executable\server.exe -NewName server.exe
+
