@@ -62,7 +62,7 @@ jobs:
         run: pip install -r requirements.txt 
 
       - name: Build executable
-        run: pyinstaller --onefile remote-server/server.py
+        run: pyinstaller remote-server/server.py
 
       # - name: Upload executable as artifact
       #   uses: actions/upload-artifact@v2
@@ -90,7 +90,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: dist/server  # Add the path to your executable
-          tag_name: exec-v${{ github.run_number }}  # You can customize the tag name
-          draft: false
+          tag_name: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+          draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
