@@ -66,20 +66,20 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: server-executable
-          path: remote-server/dist/server
+          path: dist/server/server
 
       - name: Download server executable
         uses: actions/download-artifact@v2
         with:
           name: server-executable
-          path: downloaded-executable
+          path: dist/server/server
 
       - name: Make executable (Unix-based platforms)
         if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
-        run: chmod +x downloaded-executable/server
+        run: chmod +x dist/server/server
 
       - name: Make executable (Windows)
         if: matrix.platform == 'windows-latest'
         run: |
-          Rename-Item -Path downloaded-executable\server.exe -NewName server.exe
+          Rename-Item -Path dist/server/server.exe -NewName server.exe
 
