@@ -66,13 +66,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: server-executable
-          path: dist/server/server
+          path: dist/server
 
       - name: Download server executable
         uses: actions/download-artifact@v2
         with:
           name: server-executable
-          path: dist/server/server
+          path: dist/server
 
       - name: Make executable (Unix-based platforms)
         if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
