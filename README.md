@@ -1,4 +1,4 @@
-The Myoblast Fusion Index Determination Software
+The Myoblast Fusion Index Determination Software (WORK IN PROGRESS)
 ================================================
 
 The Myofinder application aims to provide an open-source graphical interface 
